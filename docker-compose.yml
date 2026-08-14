@@ -1,0 +1,8 @@
+services:
+
+  # MongoDB will be added when the persistence layer is implemented.
+
+  # Redis will be added when caching/job requirements are implemented.
+
+  # Node.js backend and C++ engine will be containerized after their
+  # local implementations are stable.

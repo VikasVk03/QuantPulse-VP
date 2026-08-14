@@ -1,21 +1,31 @@
-# Dependencies
-node_modules/
-.pnpm-store/
+# ==============================
+# Node
+# ==============================
 
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==============================
 # Environment
+# ==============================
+
 .env
 .env.*
 !.env.example
 
+# ==============================
 # Build
+# ==============================
+
 dist/
 build/
 out/
 coverage/
 
 # C++
-engine/build/
-engine/.cache/
+cpp-engine/build/
 
 # Frontend
 frontend/.vite/
@@ -23,28 +33,51 @@ frontend/.vite/
 # Backend
 backend/dist/
 
+# ==============================
 # IDE
-.vscode/
+# ==============================
+
+.vscode/*
+!.vscode/settings.json
+
 .idea/
 
+# ==============================
 # OS
+# ==============================
+
 .DS_Store
 Thumbs.db
 
+# ==============================
 # Logs
+# ==============================
+
 *.log
 logs/
 
+# ==============================
 # Temporary
+# ==============================
+
 tmp/
 temp/
 
-# Data generated locally
+# ==============================
+# Generated datasets
+# ==============================
+
 data/raw/
 data/processed/
 
-# Benchmark output
+# ==============================
+# Benchmark results
+# ==============================
+
 benchmarks/results/
 
+# ==============================
 # Docker
+# ==============================
+
 docker/.env
