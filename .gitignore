@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build
+dist/
+build/
+out/
+coverage/
+
+# C++
+engine/build/
+engine/.cache/
+
+# Frontend
+frontend/.vite/
+
+# Backend
+backend/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary
+tmp/
+temp/
+
+# Data generated locally
+data/raw/
+data/processed/
+
+# Benchmark output
+benchmarks/results/
+
+# Docker
+docker/.env
