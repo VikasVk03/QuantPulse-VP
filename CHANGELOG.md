@@ -21,6 +21,13 @@ All notable changes to QuantPulse are documented here.
 ### Testing
 
 - Manual execution of StatisticsEngine demo verified
+- Added GoogleTest integration
+- Added CTest integration
+- Added 10 StatisticsEngine unit tests
+- Added edge-case tests for empty datasets
+- Added tests for negative and single-value datasets
+- Added tests for odd/even median datasets
+- Verified 100% test pass rate
 
 ---
 
