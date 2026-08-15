@@ -36,3 +36,23 @@ target_link_libraries(
     PRIVATE 
         quantpulse_core
 )
+
+enable_testing()
+
+find_package(GTest REQUIRED)
+
+add_executable(
+    quantpulse_tests
+    tests/statistics/StatisticsEngineTest.cpp 
+)
+
+target_link_libraries(
+    quantpulse_tests
+    PRIVATE
+        quantpulse_core
+        GTest::gtest_main
+)
+
+include(GoogleTest)
+
+gtest_discover_tests(quantpulse_tests)
