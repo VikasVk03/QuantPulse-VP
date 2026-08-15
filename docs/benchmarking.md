@@ -2,13 +2,23 @@
 
 ## Status
 
-**Initial benchmarking design**
+**Initial benchmarking milestone complete**
 
-Benchmarking infrastructure and results are not yet fully implemented.
+Benchmarking infrastructure has been implemented for the current
+StatisticsEngine.
 
-This document defines how QuantPulse should measure and report performance as the project evolves.
+The current benchmark suite measures:
 
-Performance claims should be based on reproducible measurements rather than assumptions about a particular programming language, library, compiler, or implementation.
+- Mean
+- Median
+- Population variance
+- Standard deviation
+
+Benchmark results have been collected using a Release build with
+`-O3` optimization.
+
+This document contains both the general benchmarking methodology and
+the currently measured StatisticsEngine baseline.
 
 ---
 
@@ -169,18 +179,33 @@ This is particularly useful for latency-sensitive operations.
 
 ---
 
-# 4. Planned C++ Benchmarks
+# 4. C++ Benchmarks
 
-The initial benchmark suite should focus on the statistical functionality implemented by the C++ quant engine.
+The initial benchmark suite focuses on the statistical functionality implemented by the C++ quantitative engine.
 
 ## 4.1 Statistics
 
-Planned benchmarks:
+Implemented benchmarks:
 
 - Mean
 - Median
 - Population variance
 - Standard deviation
+
+Each operation is benchmarked across multiple dataset sizes using
+Google Benchmark.
+
+Benchmark source:
+
+```text
+cpp-engine/benchmarks/statistics/StatisticsEngineBenchmark.cpp
+```
+
+Benchmark target:
+
+```text
+quantpulse_benchmarks
+```
 
 Each benchmark should measure the implementation across multiple dataset sizes.
 
@@ -228,17 +253,19 @@ These benchmarks should be introduced only after the corresponding functionality
 
 # 5. Dataset Sizes
 
-The initial planned benchmark sizes are:
+The current StatisticsEngine benchmark uses:
 
 ```text
 1,000
 10,000
 100,000
 1,000,000
-10,000,000
 ```
 
-These sizes are intended to reveal how an implementation behaves as the workload grows.
+These sizes are used to observe how execution time scales as the
+workload increases.
+
+A 10,000,000-observation workload remains a future benchmark size and will be introduced when required.
 
 The exact sizes may vary depending on the operation.
 
@@ -277,33 +304,40 @@ Where random data is used, the random seed should be controlled when reproducibi
 
 # 7. Benchmark Environment
 
-Each benchmark result should document the environment in which it was executed.
-
-Required information:
-
-- CPU
-- CPU core count where relevant
-- OS
-- Compiler
-- Compiler version
-- Compiler optimization flags
-- Build configuration
-- Architecture
-- Benchmark framework/version where applicable
-
-Example:
+The current StatisticsEngine benchmark environment is:
 
 ```text
-CPU:              <CPU model>
-OS:               <Operating system>
-Architecture:     <architecture>
-Compiler:         <compiler>
-Compiler Version: <version>
-Optimization:     -O3
-Build Type:       Release
+OS: Ubuntu Linux / WSL2
+Compiler: GCC 13.3.0
+C++ Standard: C++20
+Build System: CMake + Ninja
+Build Configuration: Release
+Optimization: -O3
+Architecture: x86_64
+Benchmark Framework: Google Benchmark
 ```
 
-The exact environment will be recorded when benchmark infrastructure is implemented.
+The benchmark was executed on a system reporting:
+
+```text
+CPU:
+8 logical CPUs
+~2496 MHz reported frequency
+
+L1 Data:
+32 KiB × 4
+
+L1 Instruction:
+32 KiB × 4
+
+L2 Unified:
+256 KiB × 4
+
+L3 Unified:
+8192 KiB × 1
+```
+
+CPU frequency, system load, and WSL scheduling may vary between runs.
 
 ---
 
@@ -456,7 +490,59 @@ The exact reporting format will depend on the benchmark framework selected by th
 
 ---
 
-# 14. Example Benchmark Result
+# 14. Current Benchmark Result
+
+## 14.1 Benchmark Configuration
+
+The current benchmark uses deterministic synthetic data:
+
+```text
+Generator:
+std::mt19937_64
+```
+
+Seed: 42
+
+Distribution: std::uniform_real_distribution<double>
+
+Range: [50.0, 150.0]
+
+Dataset generation occurs outside the timed benchmark loop.
+
+The benchmark therefore measures the StatisticsEngine operation rather than random-data generation.
+
+## 14.2 Results
+
+Benchmark date:
+
+```text
+2026-08-15
+```
+
+The CPU time column is used for comparison.
+
+| Operation          |       1K |       10K |      100K |        1M | Complexity |
+| ------------------ | -------: | --------: | --------: | --------: | ---------- |
+| Mean               |  1.62 µs |  15.66 µs | 160.67 µs |   1.60 ms | O(n)       |
+| Median             | 26.64 µs | 723.84 µs |   8.26 ms | 104.43 ms | O(n log n) |
+| Variance           |  3.21 µs |  33.06 µs | 311.78 µs |   3.24 ms | O(n)       |
+| Standard Deviation |  3.09 µs |  31.56 µs | 325.75 µs |   3.30 ms | O(n)       |
+
+Google Benchmark complexity analysis produced approximately:
+
+```text
+Mean: 1.56 N
+
+Median: 5.11 NlgN
+
+Variance: 3.16 N
+
+Standard Deviation: 3.21 N
+```
+
+The measured scaling is consistent with the expected algorithmic complexity of the current implementations.
+
+# 15. Benchmark Result Format
 
 A future benchmark report may look conceptually like:
 
@@ -482,7 +568,7 @@ Documentation must not contain fabricated performance numbers.
 
 ---
 
-# 15. Scaling Analysis
+# 16. Scaling Analysis
 
 Benchmarking should examine how performance changes with input size.
 
@@ -504,7 +590,7 @@ For example, a linear algorithm should generally demonstrate approximately linea
 
 ---
 
-# 16. Complexity vs. Benchmark Results
+# 17. Complexity vs. Benchmark Results
 
 Algorithmic complexity and measured performance answer different questions.
 
@@ -529,7 +615,7 @@ A benchmark should not be used to replace complexity analysis, and complexity an
 
 ---
 
-# 17. Memory Benchmarking
+# 18. Memory Benchmarking
 
 Memory usage should be evaluated separately from execution time when appropriate.
 
@@ -552,7 +638,7 @@ Future benchmarks may compare these implementations once alternative implementat
 
 ---
 
-# 18. Benchmark Comparison Rules
+# 19. Benchmark Comparison Rules
 
 When comparing two implementations, ensure that:
 
@@ -570,7 +656,7 @@ Avoid comparisons based on a single execution.
 
 ---
 
-# 19. Optimization Rule
+# 20. Optimization Rule
 
 **Do not optimize before measuring.**
 
@@ -611,7 +697,7 @@ An optimization should be considered successful only when it:
 
 ---
 
-# 20. Profiling
+# 21. Profiling
 
 When a benchmark identifies a performance problem, profiling should be used to determine where execution time is being spent.
 
@@ -632,7 +718,7 @@ Optimization should target measured bottlenecks rather than assumptions.
 
 ---
 
-# 21. Regression Benchmarking
+# 22. Regression Benchmarking
 
 Performance should be monitored as the codebase evolves.
 
@@ -664,7 +750,7 @@ The exact regression thresholds are not yet defined.
 
 ---
 
-# 22. Reproducibility
+# 23. Reproducibility
 
 Benchmark results should contain enough metadata to reproduce the measurement.
 
@@ -696,7 +782,7 @@ should also be recorded where appropriate.
 
 ---
 
-# 23. Benchmark Storage
+# 24. Benchmark Storage
 
 The project may eventually store benchmark results in a structured format such as:
 
@@ -714,7 +800,7 @@ Benchmark source code and benchmark results should remain distinguishable.
 
 ---
 
-# 24. Benchmark Naming
+# 25. Benchmark Naming
 
 Benchmark names should clearly identify the operation and workload.
 
@@ -742,55 +828,76 @@ Naming conventions should remain consistent across the benchmark suite.
 
 ---
 
-# 25. Planned Benchmark Matrix
+# 26. Benchmark Matrix
 
 The initial benchmark matrix is:
 
-| Operation          |      1K |     10K |    100K |      1M |     10M |
-| ------------------ | ------: | ------: | ------: | ------: | ------: |
-| Mean               | Planned | Planned | Planned | Planned | Planned |
-| Median             | Planned | Planned | Planned | Planned | Planned |
-| Variance           | Planned | Planned | Planned | Planned | Planned |
-| Standard Deviation | Planned | Planned | Planned | Planned | Planned |
+| Operation          |        1K |       10K |      100K |        1M |     10M |
+| ------------------ | --------: | --------: | --------: | --------: | ------: |
+| Median             | Completed | Completed | Completed | Completed | Planned |
+| Mean               | Completed | Completed | Completed | Completed | Planned |
+| Variance           | Completed | Completed | Completed | Completed | Planned |
+| Standard Deviation | Completed | Completed | Completed | Completed | Planned |
 
 Future operations will be added as their implementations become available.
 
 ---
 
-# 26. Current Status
+# 27. Current Status
 
-At this stage, QuantPulse should treat benchmarking as **planned infrastructure**, not as an existing source of performance claims.
+Benchmarking infrastructure for StatisticsEngine is COMPLETE.
 
-The project currently does not claim:
+Current status:
 
-- A specific execution time
-- A specific throughput
-- A specific memory footprint
-- A specific C++ performance advantage
-- A specific Node.js/C++ performance ratio
+```text
+Google Benchmark integration     COMPLETE
+Release benchmark configuration  COMPLETE
+Mean benchmark                   COMPLETE
+Median benchmark                 COMPLETE
+Variance benchmark               COMPLETE
+Standard deviation benchmark     COMPLETE
+Complexity analysis              COMPLETE
+Baseline measurements            COMPLETE
+Benchmark methodology            DOCUMENTED
+```
 
-Such claims should only be added after reproducible benchmark runs have been performed.
+Current measured complexity:
+
+```text
+Mean                  O(n)
+Median                O(n log n)
+Variance              O(n)
+Standard deviation    O(n)
+```
+
+The current benchmark establishes the first performance baseline for the QuantPulse quantitative engine.
+
+The project does not currently claim a universal "C++ is faster" performance advantage. All performance claims remain specific to the documented workload and benchmark environment.
 
 ---
 
-# 27. Future Benchmark Work
+# 28. Future Benchmark Work
 
 Planned work includes:
 
-1. Select a C++ benchmark framework.
-2. Implement the initial statistics benchmarks.
-3. Generate reproducible benchmark datasets.
-4. Define environment metadata.
-5. Establish baseline measurements.
-6. Add benchmark result reporting.
-7. Add profiling workflows.
-8. Add regression detection.
-9. Benchmark new quantitative models as they are implemented.
-10. Evaluate storage and processing strategies using realistic market-data workloads.
+1. Add larger benchmark datasets where appropriate.
+2. Benchmark real market datasets.
+3. Add memory measurements.
+4. Add CPU profiling workflows.
+5. Investigate cache behavior.
+6. Compare alternative implementations.
+7. Add regression benchmarking.
+8. Benchmark ReturnsEngine.
+9. Benchmark VolatilityEngine.
+10. Benchmark backtesting workloads.
+11. Benchmark market-data processing.
+12. Evaluate C++ service latency.
+13. Define automated performance regression thresholds.
+14. Evaluate structured benchmark result storage.
 
 ---
 
-# 28. Design Goal
+# 29. Design Goal
 
 QuantPulse benchmarking should provide **evidence rather than assumptions**.
 

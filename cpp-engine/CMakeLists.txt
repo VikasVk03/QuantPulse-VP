@@ -1,3 +1,7 @@
+# ----------------------------
+# Project Configuration
+# ----------------------------
+
 cmake_minimum_required(VERSION 3.20)
 
 project(
@@ -9,6 +13,8 @@ project(
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+include(FetchContent)
 
 add_library(quantpulse_core src/domain/statistics/StatisticsEngine.cpp)
 
@@ -37,6 +43,10 @@ target_link_libraries(
         quantpulse_core
 )
 
+# ----------------------------
+# Testing
+# ----------------------------
+
 enable_testing()
 
 find_package(GTest REQUIRED)
@@ -56,3 +66,32 @@ target_link_libraries(
 include(GoogleTest)
 
 gtest_discover_tests(quantpulse_tests)
+
+# ----------------------------
+# Benchmarking
+# ----------------------------
+
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    google_benchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG v1.9.4
+    GIT_SHALLOW TRUE
+)
+
+FetchContent_MakeAvailable(google_benchmark)
+
+add_executable(
+    quantpulse_benchmarks
+    benchmarks/statistics/StatisticsEngineBenchmark.cpp
+
+)
+
+target_link_libraries(
+    quantpulse_benchmarks
+    PRIVATE 
+        quantpulse_core
+        benchmark::benchmark   
+)
