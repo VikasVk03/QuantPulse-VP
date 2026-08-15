@@ -1,3 +1,4 @@
 {
-  "cmake.sourceDirectory": "/home/kali/project/QuantPulse-VP/cpp-engine"
+  "cmake.sourceDirectory": "${workspaceFolder}/cpp-engine",
+  "cmake.buildDirectory": "${workspaceFolder}/cpp-engine/build"
 }
