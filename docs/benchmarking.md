@@ -47,7 +47,8 @@ This document contains the general benchmarking methodology and the currently me
   - [4.1 Statistics](#41-statistics)
   - [4.2 ReturnsEngine](#42-returnsengine)
   - [4.3 VolatilityEngine](#43-volatilityengine)
-  - [4.4 Future Quantitative Benchmarks](#44-future-quantitative-benchmarks)
+  - [4.4 RiskEngine](#44-riskengine)
+  - [4.5 Future Quantitative Benchmarks](#45-future-quantitative-benchmarks)
   - [4.5 Future Market-Data Benchmarks](#45-future-market-data-benchmarks)
 - [5. Dataset Sizes](#5-dataset-sizes)
 - [6. Benchmark Workload](#6-benchmark-workload)
@@ -398,18 +399,61 @@ The test suite covers:
 - NaN returns
 - infinite returns
 
-## 4.4 Future Quantitative Benchmarks
+## 4.4 RiskEngine
+
+Implemented benchmarks:
+
+- Sharpe ratio
+- Maximum drawdown
+- Downside deviation
+
+Benchmark source:
+
+```text
+cpp-engine/benchmarks/risk/RiskEngineBenchmark.cpp
+```
+
+Benchmark target: `quantpulse_benchmarks`
+
+The RiskEngine benchmarks use deterministic synthetic return data generated outside the timed benchmark loop.
+
+Latest 1,000,000 element baseline:
+
+```text
+Sharpe ratio:        ~4.55 ms
+Maximum drawdown:    ~2.23 ms
+Downside deviation:  ~2.09 ms
+```
+
+Observed complexity:
+
+```text
+Sharpe ratio        O(n)
+Maximum drawdown    O(n)
+Downside deviation  O(n)
+```
+
+Current baseline:
+
+| Operation          |       1K |       10K |       100K |       1M | Complexity |
+| ------------------ | -------: | --------: | ---------: | -------: | ---------- |
+| Sharpe Ratio       | 3.763 µs | 39.558 µs | 383.795 µs | 4.548 ms | O(n)       |
+| Maximum Drawdown   | 2.026 µs | 20.330 µs | 194.275 µs | 2.230 ms | O(n)       |
+| Downside Deviation | 1.878 µs | 18.286 µs | 183.889 µs | 2.093 ms | O(n)       |
+
+Benchmark run: 17-08-2026
+
+The benchmark was executed using the same Release benchmark environment described in Section 7.
+
+## 4.5 Future Quantitative Benchmarks
 
 As new quantitative models are implemented, benchmarks may be added for:
 
-- Rolling statistics
 - Realized volatility
 - EWMA volatility
 - Covariance
 - Correlation
-- Sharpe ratio
 - Sortino ratio
-- Maximum drawdown
 - VaR
 - CVaR
 - Beta

@@ -21,6 +21,7 @@ add_library(
     src/domain/statistics/StatisticsEngine.cpp
     src/domain/returns/ReturnsEngine.cpp
     src/domain/volatility/VolatilityEngine.cpp
+    src/domain/risk/RiskEngine.cpp 
 )
 
 target_include_directories(
@@ -60,7 +61,8 @@ add_executable(
     quantpulse_tests
     tests/statistics/StatisticsEngineTest.cpp
     tests/returns/ReturnsEngineTest.cpp
-    tests/volatility/VolatilityEngineTest.cpp  
+    tests/volatility/VolatilityEngineTest.cpp
+    tests/risk/RiskEngineTest.cpp  
 )
 
 target_link_libraries(
@@ -95,6 +97,7 @@ add_executable(
     benchmarks/statistics/StatisticsEngineBenchmark.cpp
     benchmarks/returns/ReturnsEngineBenchmark.cpp
     benchmarks/volatility/VolatilityEngineBenchmark.cpp
+    benchmarks/risk/RiskEngineBenchmark.cpp
 )
 
 target_link_libraries(

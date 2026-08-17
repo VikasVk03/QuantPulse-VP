@@ -580,9 +580,9 @@ Dataset sizes may be adjusted based on memory usage and runtime.
 - [x] StatisticsEngine
 - [x] GoogleTest integration
 - [x] StatisticsEngine unit tests
-- [ ] StatisticsEngine benchmarks
-- [ ] ReturnsEngine
-- [ ] VolatilityEngine
+- [x] StatisticsEngine benchmarks
+- [x] ReturnsEngine
+- [x] VolatilityEngine
 
 ## Phase 2 — C++ Quant Engine
 
