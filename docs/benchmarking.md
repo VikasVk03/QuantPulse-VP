@@ -20,6 +20,9 @@ The current benchmark suite measures:
     - Log returns
     - Cumulative return
 
+- VolatilityEngine
+    - Historical Volatility
+
 Benchmark results have been collected using Release builds with `-O3` optimization.
 
 This document contains the general benchmarking methodology and the currently measured quantitative-engine baselines.
@@ -43,8 +46,9 @@ This document contains the general benchmarking methodology and the currently me
 - [4. C++ Benchmarks](#4-c-benchmarks)
   - [4.1 Statistics](#41-statistics)
   - [4.2 ReturnsEngine](#42-returnsengine)
-  - [4.3 Future Quantitative Benchmarks](#43-future-quantitative-benchmarks)
-  - [4.4 Future Market-Data Benchmarks](#44-future-market-data-benchmarks)
+  - [4.3 VolatilityEngine](#43-volatilityengine)
+  - [4.4 Future Quantitative Benchmarks](#44-future-quantitative-benchmarks)
+  - [4.5 Future Market-Data Benchmarks](#45-future-market-data-benchmarks)
 - [5. Dataset Sizes](#5-dataset-sizes)
 - [6. Benchmark Workload](#6-benchmark-workload)
 - [7. Benchmark Environment](#7-benchmark-environment)
@@ -246,9 +250,10 @@ Implemented benchmarks:
 - Median
 - Population variance
 - Standard deviation
+- Sample variance
+- Sample standard deviation
 
-Each operation is benchmarked across multiple dataset sizes using
-Google Benchmark.
+Each operation is benchmarked across multiple dataset sizes using Google Benchmark.
 
 Benchmark source:
 
@@ -282,8 +287,7 @@ cpp-engine/benchmarks/returns/ReturnsEngineBenchmark.cpp
 
 Benchmark target: quantpulse_benchmarks
 
-The current ReturnsEngine benchmarks use deterministic synthetic input
-generated outside the timed benchmark loop.
+The current ReturnsEngine benchmarks use deterministic synthetic input generated outside the timed benchmark loop.
 
 Latest 1,000,000 element baseline:
 
@@ -336,12 +340,69 @@ Benchmark run: `17-08-2026`
 
 The benchmark was executed using the same Release benchmark environment described in Section 7.
 
-## 4.3 Future Quantitative Benchmarks
+## 4.3 VolatilityEngine
+
+Implemented benchmark:
+
+- Historical volatility
+
+Benchmark source:
+
+```text
+cpp-engine/benchmarks/volatility/VolatilityEngineBenchmark.cpp
+```
+
+Benchmark target: `quantpulse_benchmarks`
+
+The VolatilityEngine benchmark uses deterministic synthetic return data generated outside the timed benchmark loop.
+
+Historical volatility is calculated using the sample standard deviation of returns and annualized using:
+
+```text
+annualized volatility =
+sample standard deviation × sqrt(periods per year)
+```
+
+Observed complexity:
+
+```text
+Historical volatility    O(n)
+```
+
+Current baseline:
+
+| Operation             |       1K |       10K |       100K |       1M | Complexity |
+| --------------------- | -------: | --------: | ---------: | -------: | ---------- |
+| Historical Volatility | 3.076 µs | 29.173 µs | 322.319 µs | 3.137 ms | O(n)       |
+
+Benchmark run: `17-08-2026`
+
+The benchmark was executed using the same Release benchmark environment described in Section 7.
+
+Verification:
+
+```text
+All VolatilityEngine tests passed
+100% tests passed, 0 tests failed
+```
+
+The test suite covers:
+
+- annualized historical volatility
+- custom periods per year
+- zero volatility
+- square-root-of-time scaling
+- empty return series
+- insufficient observations
+- invalid periods per year
+- NaN returns
+- infinite returns
+
+## 4.4 Future Quantitative Benchmarks
 
 As new quantitative models are implemented, benchmarks may be added for:
 
 - Rolling statistics
-- Historical volatility
 - Realized volatility
 - EWMA volatility
 - Covariance
@@ -358,7 +419,7 @@ As new quantitative models are implemented, benchmarks may be added for:
 
 ---
 
-## 4.4 Future Market-Data Benchmarks
+## 4.5 Future Market-Data Benchmarks
 
 Market-data functionality may eventually require benchmarks for:
 
