@@ -94,4 +94,70 @@ namespace quantpulse::domain::statistics
     {
         return std::sqrt(sampleVariance(values));
     }
+
+    double StatisticsEngine::covariance(
+        const std::vector<double> &x,
+        const std::vector<double> &y)
+    {
+        if (x.size() < 2 || y.size() < 2)
+        {
+            throw std::invalid_argument(
+                "At least two observations are required.");
+        }
+
+        if (x.size() != y.size())
+        {
+            throw std::invalid_argument(
+                "Datasets must have the same size.");
+        }
+
+        const double meanX = mean(x);
+        const double meanY = mean(y);
+
+        double covarianceSum = 0.0;
+
+        for (std::size_t i = 0; i < x.size(); ++i)
+        {
+            covarianceSum +=
+                (x[i] - meanX) *
+                (y[i] - meanY);
+        }
+
+        return covarianceSum /
+               static_cast<double>(x.size() - 1);
+    }
+
+    double StatisticsEngine::correlation(
+        const std::vector<double> &x,
+        const std::vector<double> &y)
+    {
+
+        if (x.size() != y.size())
+        {
+            throw std::invalid_argument(
+                "Datasets must have the same size.");
+        }
+
+        if (x.size() < 2)
+        {
+            throw std::invalid_argument(
+                "At least two observations are required to calculate correlation.");
+        }
+
+        const double standardDeviationX =
+            sampleStandardDeviation(x);
+
+        const double standardDeviationY =
+            sampleStandardDeviation(y);
+
+        if (standardDeviationX == 0.0 ||
+            standardDeviationY == 0.0)
+        {
+            throw std::invalid_argument(
+                "Correlation is undefined for zero-variance data.");
+        }
+
+        return covariance(x, y) /
+               (standardDeviationX * standardDeviationY);
+    }
 }

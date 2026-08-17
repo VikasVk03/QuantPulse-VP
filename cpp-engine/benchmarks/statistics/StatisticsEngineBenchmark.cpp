@@ -142,6 +142,27 @@ static void BM_SAMPLE_STANDARD_DEVIATION(
     state.SetComplexityN(state.range(0));
 }
 
+static void BM_CORRELATION(benchmark::State &state)
+{
+    const std::size_t size =
+        static_cast<std::size_t>(state.range(0));
+
+    const auto x = generateDataset(size);
+    const auto y = generateDataset(size);
+
+    for (auto _ : state)
+    {
+        const double result =
+            StatisticsEngine::correlation(x, y);
+
+        benchmark::DoNotOptimize(result);
+    }
+
+    state.SetItemsProcessed(
+        static_cast<int64_t>(state.iterations()) *
+        static_cast<int64_t>(size));
+}
+
 // ---------------------------------------------------------
 // * Dataset Sizes
 // ---------------------------------------------------------
@@ -178,6 +199,10 @@ BENCHMARK(BM_SAMPLE_STANDARD_DEVIATION)
     ->RangeMultiplier(10)
     ->Range(1000, 1000000)
     ->Complexity();
+
+BENCHMARK(BM_CORRELATION)
+    ->RangeMultiplier(10)
+    ->Range(1000, 1000000);
 
 // BENCHMARK_MAIN();
 

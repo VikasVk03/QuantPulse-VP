@@ -132,5 +132,46 @@ namespace quantpulse::domain::statistics
         [[nodiscard]]
         static double sampleStandardDeviation(
             const std::vector<double> &values);
+
+        /**
+         * @brief Calculate the sample covariance between two datasets.
+         *
+         * Covariance measures the joint variability between two variables.
+         *
+         * @param x First dataset.
+         * @param y Second dataset.
+         *
+         * @return The sample covariance between x and y.
+         *
+         * @throw std::invalid_argument if the datasets are empty,
+         *        have different sizes, or contain fewer than two observations.
+         *
+         * @note Neither input collection is modified.
+         */
+        [[nodiscard]]
+        static double covariance(
+            const std::vector<double> &x,
+            const std::vector<double> &y);
+
+        /**
+         * @brief Calculate the Pearson correlation coefficient between two datasets.
+         *
+         * Correlation normalizes covariance by the sample standard deviations
+         * of the two datasets.
+         *
+         * @param x First dataset.
+         * @param y Second dataset.
+         *
+         * @return Pearson correlation coefficient in the range [-1, 1].
+         *
+         * @throw std::invalid_argument if the datasets are invalid or either
+         *        dataset has zero standard deviation.
+         *
+         * @note Neither input collection is modified.
+         */
+        [[nodiscard]]
+        static double correlation(
+            const std::vector<double> &x,
+            const std::vector<double> &y);
     };
 } // namespace quantpulse::domain::statistics

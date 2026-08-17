@@ -190,3 +190,205 @@ TEST(StatisticsEngineTest, ThrowsForEmptySampleStandardDeviation)
         StatisticsEngine::sampleStandardDeviation(values),
         std::invalid_argument);
 }
+
+// ============================================================
+// * Covariance
+// ============================================================
+
+TEST(StatisticsEngineTest, CalculatesPositiveCovariance)
+{
+    const std::vector<double> x{
+        1.0, 2.0, 3.0, 4.0};
+
+    const std::vector<double> y{
+        2.0, 4.0, 6.0, 8.0};
+
+    EXPECT_NEAR(
+        StatisticsEngine::covariance(x, y),
+        3.3333333333333335,
+        1e-12);
+}
+
+TEST(StatisticsEngineTest, CalculatesNegativeCovariance)
+{
+    const std::vector<double> x{
+        1.0, 2.0, 3.0, 4.0};
+
+    const std::vector<double> y{
+        8.0, 6.0, 4.0, 2.0};
+
+    EXPECT_NEAR(
+        StatisticsEngine::covariance(x, y),
+        -3.3333333333333335,
+        1e-12);
+}
+
+TEST(StatisticsEngineTest, CalculatesZeroCovariance)
+{
+    const std::vector<double> x{
+        -1.0, 0.0, 1.0};
+
+    const std::vector<double> y{
+        1.0, 0.0, 1.0};
+
+    EXPECT_NEAR(
+        StatisticsEngine::covariance(x, y),
+        0.0,
+        1e-12);
+}
+
+TEST(StatisticsEngineTest, CalculatesCovarianceOfDatasetWithItself)
+{
+    const std::vector<double> values{
+        1.0, 2.0, 3.0, 4.0};
+
+    EXPECT_NEAR(
+        StatisticsEngine::covariance(values, values),
+        StatisticsEngine::sampleVariance(values),
+        1e-12);
+}
+
+TEST(StatisticsEngineTest, ThrowsForCovarianceWithDifferentSizes)
+{
+    const std::vector<double> x{
+        1.0, 2.0, 3.0};
+
+    const std::vector<double> y{
+        1.0, 2.0};
+
+    EXPECT_THROW(
+        StatisticsEngine::covariance(x, y),
+        std::invalid_argument);
+}
+
+TEST(StatisticsEngineTest, ThrowsForEmptyCovarianceInput)
+{
+    const std::vector<double> x;
+    const std::vector<double> y;
+
+    EXPECT_THROW(
+        StatisticsEngine::covariance(x, y),
+        std::invalid_argument);
+}
+
+TEST(StatisticsEngineTest, ThrowsForSingleValueCovarianceInput)
+{
+    const std::vector<double> x{
+        1.0};
+
+    const std::vector<double> y{
+        2.0};
+
+    EXPECT_THROW(
+        StatisticsEngine::covariance(x, y),
+        std::invalid_argument);
+}
+
+// ============================================================
+// * Correlation
+// ============================================================
+
+TEST(StatisticsEngineTest, CalculatesPerfectPositiveCorrelation)
+{
+    const std::vector<double> x{
+        1.0, 2.0, 3.0, 4.0};
+
+    const std::vector<double> y{
+        2.0, 4.0, 6.0, 8.0};
+
+    EXPECT_NEAR(
+        StatisticsEngine::correlation(x, y),
+        1.0,
+        1e-12);
+}
+
+TEST(StatisticsEngineTest, CalculatesPerfectNegativeCorrelation)
+{
+    const std::vector<double> x{
+        1.0, 2.0, 3.0, 4.0};
+
+    const std::vector<double> y{
+        8.0, 6.0, 4.0, 2.0};
+
+    EXPECT_NEAR(
+        StatisticsEngine::correlation(x, y),
+        -1.0,
+        1e-12);
+}
+
+TEST(StatisticsEngineTest, CalculatesZeroCorrelation)
+{
+    const std::vector<double> x{
+        1.0, 2.0, 3.0};
+
+    const std::vector<double> y{
+        1.0, 0.0, 1.0};
+
+    EXPECT_NEAR(
+        StatisticsEngine::correlation(x, y),
+        0.0,
+        1e-12);
+}
+
+TEST(StatisticsEngineTest, CorrelationIsSymmetric)
+{
+    const std::vector<double> x{
+        1.0, 2.0, 3.0, 4.0};
+
+    const std::vector<double> y{
+        2.0, 5.0, 4.0, 9.0};
+
+    EXPECT_NEAR(
+        StatisticsEngine::correlation(x, y),
+        StatisticsEngine::correlation(y, x),
+        1e-12);
+}
+
+TEST(StatisticsEngineTest, ThrowsForDifferentSizedCorrelationInputs)
+{
+    const std::vector<double> x{
+        1.0, 2.0, 3.0};
+
+    const std::vector<double> y{
+        1.0, 2.0};
+
+    EXPECT_THROW(
+        StatisticsEngine::correlation(x, y),
+        std::invalid_argument);
+}
+
+TEST(StatisticsEngineTest, ThrowsForEmptyCorrelationInput)
+{
+    const std::vector<double> x;
+    const std::vector<double> y;
+
+    EXPECT_THROW(
+        StatisticsEngine::correlation(x, y),
+        std::invalid_argument);
+}
+
+TEST(StatisticsEngineTest, ThrowsForSingleObservationCorrelation)
+{
+    const std::vector<double> x{
+        1.0};
+
+    const std::vector<double> y{
+        2.0};
+
+    EXPECT_THROW(
+        StatisticsEngine::correlation(x, y),
+        std::invalid_argument);
+}
+
+TEST(StatisticsEngineTest, ThrowsForZeroVarianceCorrelationInput)
+{
+    const std::vector<double> x{
+        1.0, 1.0, 1.0, 1.0};
+
+    const std::vector<double> y{
+        2.0, 3.0, 4.0, 5.0};
+
+    EXPECT_THROW(
+        StatisticsEngine::correlation(x, y),
+        std::invalid_argument);
+}

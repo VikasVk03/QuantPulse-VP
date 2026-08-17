@@ -4,8 +4,7 @@
 
 **Quantitative engine benchmarking milestone in progress**
 
-Benchmarking infrastructure has been implemented for the C++ quantitative
-engine.
+Benchmarking infrastructure has been implemented for the C++ quantitative engine.
 
 The current benchmark suite measures:
 
@@ -14,7 +13,8 @@ The current benchmark suite measures:
     - Median
     - Population variance
     - Standard deviation
-
+    - Covariance
+    - Correlation
 - ReturnsEngine
     - Simple returns
     - Log returns
@@ -45,6 +45,8 @@ This document contains the general benchmarking methodology and the currently me
     - [p99](#p99)
 - [4. C++ Benchmarks](#4-c-benchmarks)
   - [4.1 Statistics](#41-statistics)
+    - [Covariance](#covariance)
+    - [Correlation](#correlation)
   - [4.2 ReturnsEngine](#42-returnsengine)
   - [4.3 VolatilityEngine](#43-volatilityengine)
   - [4.4 RiskEngine](#44-riskengine)
@@ -253,6 +255,8 @@ Implemented benchmarks:
 - Standard deviation
 - Sample variance
 - Sample standard deviation
+- Covariance
+- Correlation
 
 Each operation is benchmarked across multiple dataset sizes using Google Benchmark.
 
@@ -268,9 +272,64 @@ Benchmark target:
 quantpulse_benchmarks
 ```
 
-Each benchmark should measure the implementation across multiple dataset sizes.
+Each benchmark measures the implementation across multiple dataset sizes.
 
----
+### Covariance
+
+Covariance measures the direction of the relationship between two datasets.
+
+Observed complexity: `Covariance = O(n)`
+
+### Correlation
+
+Pearson correlation measures the strength and direction of the linear relationship between two datasets.
+
+The benchmark uses deterministic synthetic datasets generated outside the timed benchmark loop.
+
+Latest 1,000,000 element baseline:
+
+Correlation: `~8.056 ms`
+
+Observed complexity: `Correlation = O(n)`
+
+Current correlation baseline:
+
+| Operation   |       1K |       10K |       100K |       1M | Complexity |
+| ----------- | -------: | --------: | ---------: | -------: | ---------- |
+| Correlation | 7.014 µs | 69.270 µs | 700.387 µs | 8.056 ms | O(n)       |
+
+Benchmark run: `17-08-2026`
+
+The benchmark was executed using the same Release benchmark environment described in Section 7.
+
+Verification:
+
+```text
+78/78 tests passed
+100% tests passed, 0 tests failed
+```
+
+The test suite covers:
+
+- mean
+- median
+- population variance
+- population standard deviation
+- sample variance
+- sample standard deviation
+- covariance
+- correlation
+- positive covariance
+- negative covariance
+- zero covariance
+- perfect positive correlation
+- perfect negative correlation
+- zero correlation
+- correlation symmetry
+- invalid dataset sizes
+- empty input
+- insufficient observations
+- zero variance
 
 ## 4.2 ReturnsEngine
 
@@ -451,15 +510,17 @@ As new quantitative models are implemented, benchmarks may be added for:
 
 - Realized volatility
 - EWMA volatility
-- Covariance
-- Correlation
 - Sortino ratio
+- Maximum drawdown
 - VaR
 - CVaR
 - Beta
 - Alpha
 - VWAP
 - TWAP
+- Portfolio return
+- Portfolio variance
+- Portfolio volatility
 
 ---
 
