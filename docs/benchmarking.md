@@ -49,7 +49,7 @@ This document contains the general benchmarking methodology and the currently me
   - [4.3 VolatilityEngine](#43-volatilityengine)
   - [4.4 RiskEngine](#44-riskengine)
   - [4.5 Future Quantitative Benchmarks](#45-future-quantitative-benchmarks)
-  - [4.5 Future Market-Data Benchmarks](#45-future-market-data-benchmarks)
+  - [4.6 Future Market-Data Benchmarks](#46-future-market-data-benchmarks)
 - [5. Dataset Sizes](#5-dataset-sizes)
 - [6. Benchmark Workload](#6-benchmark-workload)
 - [7. Benchmark Environment](#7-benchmark-environment)
@@ -463,7 +463,7 @@ As new quantitative models are implemented, benchmarks may be added for:
 
 ---
 
-## 4.5 Future Market-Data Benchmarks
+## 4.6 Future Market-Data Benchmarks
 
 Market-data functionality may eventually require benchmarks for:
 
