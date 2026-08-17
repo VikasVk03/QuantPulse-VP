@@ -115,12 +115,21 @@ static void BM_StandardDeviation(benchmark::State &state)
         ->Complexity()
 
 BENCHMARK(BM_MEAN)
-QUANTPULSE_BENCHMARK_SIZES;
-BENCHMARK(BM_Median)
-QUANTPULSE_BENCHMARK_SIZES;
-BENCHMARK(BM_Variance)
-QUANTPULSE_BENCHMARK_SIZES;
-BENCHMARK(BM_StandardDeviation)
-QUANTPULSE_BENCHMARK_SIZES;
+QUANTPULSE_BENCHMARK_SIZES
+    ->Complexity(benchmark::oN);
 
-BENCHMARK_MAIN();
+BENCHMARK(BM_Median)
+QUANTPULSE_BENCHMARK_SIZES
+    ->Complexity(benchmark::oNLogN);
+
+BENCHMARK(BM_Variance)
+QUANTPULSE_BENCHMARK_SIZES
+    ->Complexity(benchmark::oN);
+
+BENCHMARK(BM_StandardDeviation)
+QUANTPULSE_BENCHMARK_SIZES
+    ->Complexity(benchmark::oN);
+
+// BENCHMARK_MAIN();
+
+// commented this BENCHMARK_MAIN() as only one main we want to execute for whole quantpulse .. at this point

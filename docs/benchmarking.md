@@ -1,24 +1,79 @@
 # QuantPulse Benchmarking
 
-## Status
+**Status:** StatisticsEngine + ReturnsEngine
 
-**Initial benchmarking milestone complete**
+**Quantitative engine benchmarking milestone in progress**
 
-Benchmarking infrastructure has been implemented for the current
-StatisticsEngine.
+Benchmarking infrastructure has been implemented for the C++ quantitative
+engine.
 
 The current benchmark suite measures:
 
-- Mean
-- Median
-- Population variance
-- Standard deviation
+- StatisticsEngine
+    - Mean
+    - Median
+    - Population variance
+    - Standard deviation
 
-Benchmark results have been collected using a Release build with
-`-O3` optimization.
+- ReturnsEngine
+    - Simple returns
+    - Log returns
+    - Cumulative return
 
-This document contains both the general benchmarking methodology and
-the currently measured StatisticsEngine baseline.
+Benchmark results have been collected using Release builds with `-O3` optimization.
+
+This document contains the general benchmarking methodology and the currently measured quantitative-engine baselines.
+
+---
+
+## Table of Contents
+
+- [QuantPulse Benchmarking](#quantpulse-benchmarking)
+  - [Table of Contents](#table-of-contents)
+- [1. Purpose](#1-purpose)
+- [2. Benchmarking Principles](#2-benchmarking-principles)
+- [3. Primary Metrics](#3-primary-metrics)
+  - [3.1 Execution Time](#31-execution-time)
+  - [3.2 Throughput](#32-throughput)
+  - [3.3 Memory Usage](#33-memory-usage)
+  - [3.4 Latency Percentiles](#34-latency-percentiles)
+    - [p50](#p50)
+    - [p95](#p95)
+    - [p99](#p99)
+- [4. C++ Benchmarks](#4-c-benchmarks)
+  - [4.1 Statistics](#41-statistics)
+  - [4.2 ReturnsEngine](#42-returnsengine)
+  - [4.3 Future Quantitative Benchmarks](#43-future-quantitative-benchmarks)
+  - [4.4 Future Market-Data Benchmarks](#44-future-market-data-benchmarks)
+- [5. Dataset Sizes](#5-dataset-sizes)
+- [6. Benchmark Workload](#6-benchmark-workload)
+- [7. Benchmark Environment](#7-benchmark-environment)
+- [8. Compiler Configuration](#8-compiler-configuration)
+- [9. Iterations and Warm-Up](#9-iterations-and-warm-up)
+- [10. Measurement Method](#10-measurement-method)
+- [11. Correctness Before Performance](#11-correctness-before-performance)
+- [12. Benchmark Isolation](#12-benchmark-isolation)
+- [13. Statistical Reporting](#13-statistical-reporting)
+- [14. Current Benchmark Result](#14-current-benchmark-result)
+  - [14.1 Benchmark Configuration](#141-benchmark-configuration)
+  - [14.2 StatisticsEngine Results](#142-statisticsengine-results)
+  - [14.3 ReturnsEngine Results](#143-returnsengine-results)
+- [15. Benchmark Result Format](#15-benchmark-result-format)
+- [16. Scaling Analysis](#16-scaling-analysis)
+    - [Current ReturnsEngine Scaling](#current-returnsengine-scaling)
+- [17. Complexity vs. Benchmark Results](#17-complexity-vs-benchmark-results)
+- [18. Memory Benchmarking](#18-memory-benchmarking)
+- [19. Benchmark Comparison Rules](#19-benchmark-comparison-rules)
+- [20. Optimization Rule](#20-optimization-rule)
+- [21. Profiling](#21-profiling)
+- [22. Regression Benchmarking](#22-regression-benchmarking)
+- [23. Reproducibility](#23-reproducibility)
+- [24. Benchmark Storage](#24-benchmark-storage)
+- [25. Benchmark Naming](#25-benchmark-naming)
+  - [26. Benchmark Matrix](#26-benchmark-matrix)
+- [27. Current Status](#27-current-status)
+- [28. Future Benchmark Work](#28-future-benchmark-work)
+- [29. Design Goal](#29-design-goal)
 
 ---
 
@@ -211,12 +266,50 @@ Each benchmark should measure the implementation across multiple dataset sizes.
 
 ---
 
-## 4.2 Future Quantitative Benchmarks
+## 4.2 ReturnsEngine
 
-As new quantitative models are implemented, benchmarks may be added for:
+Implemented benchmarks:
 
 - Simple returns
 - Log returns
+- Cumulative return
+
+Benchmark source:
+
+```text
+cpp-engine/benchmarks/returns/ReturnsEngineBenchmark.cpp
+```
+
+Benchmark target: quantpulse_benchmarks
+
+The current ReturnsEngine benchmarks use deterministic synthetic input
+generated outside the timed benchmark loop.
+
+Observed complexity:
+
+```text
+Simple returns       O(n)
+Log returns          O(n)
+Cumulative return    O(n)
+```
+
+Current baseline
+
+| Operation         |        1K |       10K |       100K |        1M | Complexity |
+| ----------------- | --------: | --------: | ---------: | --------: | ---------- |
+| Simple returns    |  2.547 µs | 26.187 µs | 247.149 µs |  2.844 ms | O(n)       |
+| Log returns       | 10.110 µs | 92.498 µs | 919.789 µs | 10.164 ms | O(n)       |
+| Cumulative return |  0.980 µs |  9.979 µs | 101.403 µs |  1.159 ms | O(n)       |
+
+Benchmark run: `text 2026-08-17`
+
+The benchmark was executed using the same Release benchmark environment
+described in Section 7.
+
+## 4.3 Future Quantitative Benchmarks
+
+As new quantitative models are implemented, benchmarks may be added for:
+
 - Rolling statistics
 - Historical volatility
 - Realized volatility
@@ -235,7 +328,7 @@ As new quantitative models are implemented, benchmarks may be added for:
 
 ---
 
-## 4.3 Future Market-Data Benchmarks
+## 4.4 Future Market-Data Benchmarks
 
 Market-data functionality may eventually require benchmarks for:
 
@@ -253,7 +346,7 @@ These benchmarks should be introduced only after the corresponding functionality
 
 # 5. Dataset Sizes
 
-The current StatisticsEngine benchmark uses:
+The current StatisticsEngine and ReturnsEngine benchmarks use:
 
 ```text
 1,000
@@ -494,7 +587,11 @@ The exact reporting format will depend on the benchmark framework selected by th
 
 ## 14.1 Benchmark Configuration
 
-The current benchmark uses deterministic synthetic data:
+The current quantitative benchmarks use deterministic synthetic data.
+
+The benchmark inputs are generated outside the timed benchmark loop.
+
+This ensures that the measured execution time represents the quantitative operation rather than synthetic input generation.
 
 ```text
 Generator:
@@ -511,7 +608,7 @@ Dataset generation occurs outside the timed benchmark loop.
 
 The benchmark therefore measures the StatisticsEngine operation rather than random-data generation.
 
-## 14.2 Results
+## 14.2 StatisticsEngine Results
 
 Benchmark date:
 
@@ -541,6 +638,32 @@ Standard Deviation: 3.21 N
 ```
 
 The measured scaling is consistent with the expected algorithmic complexity of the current implementations.
+
+## 14.3 ReturnsEngine Results
+
+Benchmark date:
+
+```text
+2026-08-17
+```
+
+| Operation         |        1K |       10K |       100K |        1M | Complexity |
+| ----------------- | --------: | --------: | ---------: | --------: | ---------- |
+| Simple Returns    |  2.547 µs | 26.187 µs | 247.149 µs |  2.844 ms | O(n)       |
+| Log Returns       | 10.110 µs | 92.498 µs | 919.789 µs | 10.164 ms | O(n)       |
+| Cumulative Return |  0.980 µs |  9.979 µs | 101.403 µs |  1.159 ms | O(n)       |
+
+The observed execution times scale approximately linearly with input size.
+
+For the 1,000,000-observation workload:
+
+```text
+Simple Returns       ~2.84 ms
+Log Returns          ~10.16 ms
+Cumulative Return    ~1.16 ms
+```
+
+The higher cost of log returns is primarily associated with the logarithmic operation performed for each observation.
 
 # 15. Benchmark Result Format
 
@@ -587,6 +710,15 @@ Dataset Size       Execution Time
 This helps identify whether an implementation behaves consistently with its expected algorithmic complexity.
 
 For example, a linear algorithm should generally demonstrate approximately linear growth in execution time as input size increases, subject to hardware and implementation effects.
+
+### Current ReturnsEngine Scaling
+
+The current ReturnsEngine measurements demonstrate approximately linear
+scaling.
+
+For example, increasing the workload from 1,000 to 10,000 observations produces approximately a 10x increase in execution time. The same behavior continues through the 100,000 and 1,000,000 observation workloads.
+
+This is consistent with the expected `O(n)` complexity of the current implementations.
 
 ---
 
@@ -828,16 +960,19 @@ Naming conventions should remain consistent across the benchmark suite.
 
 ---
 
-# 26. Benchmark Matrix
+## 26. Benchmark Matrix
 
-The initial benchmark matrix is:
+The current benchmark matrix is:
 
-| Operation          |        1K |       10K |      100K |        1M |     10M |
-| ------------------ | --------: | --------: | --------: | --------: | ------: |
-| Median             | Completed | Completed | Completed | Completed | Planned |
+| Operation          | 1K        | 10K       | 100K      | 1M        | 10M     |
+| ------------------ | --------- | --------- | --------- | --------- | ------- |
 | Mean               | Completed | Completed | Completed | Completed | Planned |
+| Median             | Completed | Completed | Completed | Completed | Planned |
 | Variance           | Completed | Completed | Completed | Completed | Planned |
 | Standard Deviation | Completed | Completed | Completed | Completed | Planned |
+| Simple Returns     | Completed | Completed | Completed | Completed | Planned |
+| Log Returns        | Completed | Completed | Completed | Completed | Planned |
+| Cumulative Return  | Completed | Completed | Completed | Completed | Planned |
 
 Future operations will be added as their implementations become available.
 
@@ -845,32 +980,47 @@ Future operations will be added as their implementations become available.
 
 # 27. Current Status
 
-Benchmarking infrastructure for StatisticsEngine is COMPLETE.
+Benchmarking infrastructure for the current C++ quantitative engine is
+COMPLETE for the implemented modules.
 
 Current status:
 
 ```text
-Google Benchmark integration     COMPLETE
-Release benchmark configuration  COMPLETE
-Mean benchmark                   COMPLETE
-Median benchmark                 COMPLETE
-Variance benchmark               COMPLETE
-Standard deviation benchmark     COMPLETE
-Complexity analysis              COMPLETE
-Baseline measurements            COMPLETE
-Benchmark methodology            DOCUMENTED
+Google Benchmark integration       COMPLETE
+Release benchmark configuration    COMPLETE
+
+StatisticsEngine:
+  Mean benchmark                   COMPLETE
+  Median benchmark                 COMPLETE
+  Variance benchmark               COMPLETE
+  Standard deviation benchmark     COMPLETE
+
+ReturnsEngine:
+  Simple returns benchmark         COMPLETE
+  Log returns benchmark            COMPLETE
+  Cumulative return benchmark      COMPLETE
+
+Baseline measurements              COMPLETE
+Benchmark methodology              DOCUMENTED
+Scaling analysis                   COMPLETE
 ```
 
 Current measured complexity:
 
 ```text
-Mean                  O(n)
-Median                O(n log n)
-Variance              O(n)
-Standard deviation    O(n)
+StatisticsEngine
+  Mean                  O(n)
+  Median                O(n log n)
+  Variance              O(n)
+  Standard deviation    O(n)
+
+ReturnsEngine
+  Simple returns        O(n)
+  Log returns           O(n)
+  Cumulative return     O(n)
 ```
 
-The current benchmark establishes the first performance baseline for the QuantPulse quantitative engine.
+The current benchmark suite establishes the performance baseline for the implemented quantitative modules of QuantPulse.
 
 The project does not currently claim a universal "C++ is faster" performance advantage. All performance claims remain specific to the documented workload and benchmark environment.
 
@@ -887,13 +1037,12 @@ Planned work includes:
 5. Investigate cache behavior.
 6. Compare alternative implementations.
 7. Add regression benchmarking.
-8. Benchmark ReturnsEngine.
-9. Benchmark VolatilityEngine.
-10. Benchmark backtesting workloads.
-11. Benchmark market-data processing.
-12. Evaluate C++ service latency.
-13. Define automated performance regression thresholds.
-14. Evaluate structured benchmark result storage.
+8. Benchmark VolatilityEngine.
+9. Benchmark backtesting workloads.
+10. Benchmark market-data processing.
+11. Evaluate C++ service latency.
+12. Define automated performance regression thresholds.
+13. Evaluate structured benchmark result storage.
 
 ---
 

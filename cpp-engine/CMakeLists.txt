@@ -16,7 +16,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(FetchContent)
 
-add_library(quantpulse_core src/domain/statistics/StatisticsEngine.cpp)
+add_library(
+    quantpulse_core 
+    src/domain/statistics/StatisticsEngine.cpp
+    src/domain/returns/ReturnsEngine.cpp
+)
 
 target_include_directories(
     quantpulse_core
@@ -53,7 +57,8 @@ find_package(GTest REQUIRED)
 
 add_executable(
     quantpulse_tests
-    tests/statistics/StatisticsEngineTest.cpp 
+    tests/statistics/StatisticsEngineTest.cpp
+    tests/returns/ReturnsEngineTest.cpp  
 )
 
 target_link_libraries(
@@ -86,7 +91,7 @@ FetchContent_MakeAvailable(google_benchmark)
 add_executable(
     quantpulse_benchmarks
     benchmarks/statistics/StatisticsEngineBenchmark.cpp
-
+    benchmarks/returns/ReturnsEngineBenchmark.cpp
 )
 
 target_link_libraries(
