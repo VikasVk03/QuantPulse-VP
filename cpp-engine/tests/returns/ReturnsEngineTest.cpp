@@ -126,6 +126,46 @@ TEST(ReturnsEngineTest, CumulativeReturnsOfSingleReturn)
         1e-12);
 }
 
+TEST(ReturnsEngineTest, AllowsCompleteLoss)
+{
+    const std::vector<double> returns{
+        -1.0};
+
+    EXPECT_DOUBLE_EQ(
+        ReturnsEngine::cumulativeReturn(returns),
+        -1.0);
+}
+
+TEST(ReturnsEngineTest, ThrowsForReturnLessThanNegativeOne)
+{
+    const std::vector<double> returns{
+        -1.01};
+
+    EXPECT_THROW(
+        ReturnsEngine::cumulativeReturn(returns),
+        std::invalid_argument);
+}
+
+TEST(ReturnsEngineTest, ThrowsForNaNCumulativeReturn)
+{
+    const std::vector<double> returns{
+        std::numeric_limits<double>::quiet_NaN()};
+
+    EXPECT_THROW(
+        ReturnsEngine::cumulativeReturn(returns),
+        std::invalid_argument);
+}
+
+TEST(ReturnsEngineTest, ThrowsForInfiniteCumulativeReturn)
+{
+    const std::vector<double> returns{
+        std::numeric_limits<double>::infinity()};
+
+    EXPECT_THROW(
+        ReturnsEngine::cumulativeReturn(returns),
+        std::invalid_argument);
+}
+
 // ============================================================
 // * Validation
 // ============================================================

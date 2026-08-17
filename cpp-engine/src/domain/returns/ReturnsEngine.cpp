@@ -18,7 +18,7 @@ namespace quantpulse::domain::returns
             }
         }
 
-        void validatePriceSeries(const std::vector<double> &prices)
+        void validatePriceSeriesSize(const std::vector<double> &prices)
         {
             if (prices.size() < 2)
             {
@@ -52,7 +52,7 @@ namespace quantpulse::domain::returns
     std::vector<double> ReturnsEngine::simpleReturns(
         const std::vector<double> &prices)
     {
-        validatePriceSeries(prices);
+        validatePriceSeriesSize(prices);
 
         std::vector<double> returns;
         returns.reserve(prices.size() - 1);
@@ -69,7 +69,7 @@ namespace quantpulse::domain::returns
     std::vector<double> ReturnsEngine::logReturns(
         const std::vector<double> &prices)
     {
-        validatePriceSeries(prices);
+        validatePriceSeriesSize(prices);
 
         std::vector<double> returns;
         returns.reserve(prices.size() - 1);
@@ -96,6 +96,12 @@ namespace quantpulse::domain::returns
 
         for (const double value : returns)
         {
+            if (!std::isfinite(value) || value < -1.0)
+            {
+                throw std::invalid_argument(
+                    "Returns must be finite and greater than or equal to -1.");
+            }
+
             growthFactor *= (1.0 + value);
         }
 

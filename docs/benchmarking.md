@@ -285,6 +285,14 @@ Benchmark target: quantpulse_benchmarks
 The current ReturnsEngine benchmarks use deterministic synthetic input
 generated outside the timed benchmark loop.
 
+Latest 1,000,000 element baseline:
+
+```text
+Simple returns:       ~2.865 ms
+Log returns:          ~10.074 ms
+Cumulative return:    ~1.277 ms
+```
+
 Observed complexity:
 
 ```text
@@ -293,18 +301,40 @@ Log returns          O(n)
 Cumulative return    O(n)
 ```
 
+Verification:
+
+```text
+35/35 tests passed
+100% tests passed, 0 tests failed
+```
+
+The test suite covers:
+
+- simple returns
+- negative returns
+- zero returns
+- log returns
+- return series
+- cumulative returns
+- complete loss (-100%)
+- invalid cumulative returns
+- NaN inputs
+- infinite inputs
+- invalid prices
+- empty input
+- insufficient price series
+
 Current baseline
 
-| Operation         |        1K |       10K |       100K |        1M | Complexity |
-| ----------------- | --------: | --------: | ---------: | --------: | ---------- |
-| Simple returns    |  2.547 µs | 26.187 µs | 247.149 µs |  2.844 ms | O(n)       |
-| Log returns       | 10.110 µs | 92.498 µs | 919.789 µs | 10.164 ms | O(n)       |
-| Cumulative return |  0.980 µs |  9.979 µs | 101.403 µs |  1.159 ms | O(n)       |
+| Operation         |        1K |        10K |       100K |        1M | Complexity |
+| ----------------- | --------: | ---------: | ---------: | --------: | ---------- |
+| Simple Returns    |  2.586 µs |  23.812 µs | 237.057 µs |  2.865 ms | O(n)       |
+| Log Returns       | 10.701 µs | 127.547 µs |   1.134 ms | 10.074 ms | O(n)       |
+| Cumulative Return |  1.139 µs |  11.213 µs | 113.625 µs |  1.277 ms | O(n)       |
 
-Benchmark run: `text 2026-08-17`
+Benchmark run: `17-08-2026`
 
-The benchmark was executed using the same Release benchmark environment
-described in Section 7.
+The benchmark was executed using the same Release benchmark environment described in Section 7.
 
 ## 4.3 Future Quantitative Benchmarks
 
