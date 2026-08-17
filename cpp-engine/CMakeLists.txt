@@ -20,6 +20,7 @@ add_library(
     quantpulse_core 
     src/domain/statistics/StatisticsEngine.cpp
     src/domain/returns/ReturnsEngine.cpp
+    src/domain/volatility/VolatilityEngine.cpp
 )
 
 target_include_directories(
@@ -58,7 +59,8 @@ find_package(GTest REQUIRED)
 add_executable(
     quantpulse_tests
     tests/statistics/StatisticsEngineTest.cpp
-    tests/returns/ReturnsEngineTest.cpp  
+    tests/returns/ReturnsEngineTest.cpp
+    tests/volatility/VolatilityEngineTest.cpp  
 )
 
 target_link_libraries(
@@ -92,6 +94,7 @@ add_executable(
     quantpulse_benchmarks
     benchmarks/statistics/StatisticsEngineBenchmark.cpp
     benchmarks/returns/ReturnsEngineBenchmark.cpp
+    benchmarks/volatility/VolatilityEngineBenchmark.cpp
 )
 
 target_link_libraries(

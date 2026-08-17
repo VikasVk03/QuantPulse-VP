@@ -89,5 +89,48 @@ namespace quantpulse::domain::statistics
          */
         [[nodiscard]]
         static double standardDeviation(const std::vector<double> &values);
+
+        /**
+         * @brief Calculates the sample variance of a set of values.
+         *
+         * Sample variance estimates the variance of a population from
+         * a sample of observations.
+         *
+         * The implementation uses the sample variance formula:
+         *
+         *         Variance = Σ(x - mean)² / (N - 1)
+         *
+         * Where N is the number of observations.
+         *
+         * @param values Collection of numeric values used for the calculation.
+         *
+         * @return The sample variance of the provided values.
+         *
+         * @throw std::invalid_argument If fewer than two observations
+         * are provided.
+         *
+         * @note The input collection is not modified.
+         */
+        [[nodiscard]]
+        static double sampleVariance(
+            const std::vector<double> &values);
+
+        /**
+         * @brief Calculates the sample standard deviation of a set of values.
+         *
+         * Sample standard deviation is the square root of the sample variance.
+         *
+         * @param values Collection of numeric values used for the calculation.
+         *
+         * @return The sample standard deviation of the provided values.
+         *
+         * @throw std::invalid_argument If fewer than two observations
+         * are provided.
+         *
+         * @note The input collection is not modified.
+         */
+        [[nodiscard]]
+        static double sampleStandardDeviation(
+            const std::vector<double> &values);
     };
 } // namespace quantpulse::domain::statistics

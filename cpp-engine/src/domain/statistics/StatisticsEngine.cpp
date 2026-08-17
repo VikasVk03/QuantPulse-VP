@@ -65,4 +65,33 @@ namespace quantpulse::domain::statistics
     {
         return std::sqrt(variance(values));
     }
+
+    double StatisticsEngine::sampleVariance(
+        const std::vector<double> &values)
+    {
+        if (values.size() < 2)
+        {
+            throw std::invalid_argument(
+                "At least two observations are required to calculate sample variance.");
+        }
+
+        const double average = mean(values);
+
+        double squaredDifferenceSum = 0.0;
+
+        for (const double value : values)
+        {
+            const double difference = value - average;
+            squaredDifferenceSum += difference * difference;
+        }
+
+        return squaredDifferenceSum /
+               static_cast<double>(values.size() - 1);
+    }
+
+    double StatisticsEngine::sampleStandardDeviation(
+        const std::vector<double> &values)
+    {
+        return std::sqrt(sampleVariance(values));
+    }
 }

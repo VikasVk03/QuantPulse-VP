@@ -104,6 +104,45 @@ static void BM_StandardDeviation(benchmark::State &state)
 }
 
 // ---------------------------------------------------------
+// * Sample Variance
+// ---------------------------------------------------------
+
+static void BM_SAMPLE_VARIANCE(benchmark::State &state)
+{
+    const auto values = generateDataset(state.range(0));
+
+    for (auto _ : state)
+    {
+        const double result =
+            StatisticsEngine::sampleVariance(values);
+
+        benchmark::DoNotOptimize(result);
+    }
+
+    state.SetComplexityN(state.range(0));
+}
+
+// ---------------------------------------------------------
+// * Sample Standard Deviation
+// ---------------------------------------------------------
+
+static void BM_SAMPLE_STANDARD_DEVIATION(
+    benchmark::State &state)
+{
+    const auto values = generateDataset(state.range(0));
+
+    for (auto _ : state)
+    {
+        const double result =
+            StatisticsEngine::sampleStandardDeviation(values);
+
+        benchmark::DoNotOptimize(result);
+    }
+
+    state.SetComplexityN(state.range(0));
+}
+
+// ---------------------------------------------------------
 // * Dataset Sizes
 // ---------------------------------------------------------
 
@@ -129,6 +168,16 @@ QUANTPULSE_BENCHMARK_SIZES
 BENCHMARK(BM_StandardDeviation)
 QUANTPULSE_BENCHMARK_SIZES
     ->Complexity(benchmark::oN);
+
+BENCHMARK(BM_SAMPLE_VARIANCE)
+    ->RangeMultiplier(10)
+    ->Range(1000, 1000000)
+    ->Complexity();
+
+BENCHMARK(BM_SAMPLE_STANDARD_DEVIATION)
+    ->RangeMultiplier(10)
+    ->Range(1000, 1000000)
+    ->Complexity();
 
 // BENCHMARK_MAIN();
 

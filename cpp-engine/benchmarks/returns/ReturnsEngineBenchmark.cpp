@@ -104,4 +104,4 @@ BENCHMARK(BM_CUMULATIVE_RETURN)
     ->RangeMultiplier(10)
     ->Range(1'000, 1'000'000);
 
-BENCHMARK_MAIN();
+// BENCHMARK_MAIN();

@@ -122,3 +122,71 @@ TEST(StatisticsEngineTest, ThrowsForEmptyVarianceInput)
         static_cast<void>(StatisticsEngine::variance(values)),
         std::invalid_argument);
 }
+
+TEST(StatisticsEngineTest, CalculatesSampleVariance)
+{
+    const std::vector<double> values{
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0};
+
+    EXPECT_NEAR(
+        StatisticsEngine::sampleVariance(values),
+        2.5,
+        1e-12);
+}
+
+TEST(StatisticsEngineTest, CalculatesSampleStandardDeviation)
+{
+    const std::vector<double> values{
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0};
+
+    EXPECT_NEAR(
+        StatisticsEngine::sampleStandardDeviation(values),
+        std::sqrt(2.5),
+        1e-12);
+}
+
+TEST(StatisticsEngineTest, ThrowsForSingleValueSampleVariance)
+{
+    const std::vector<double> values{
+        42.0};
+
+    EXPECT_THROW(
+        StatisticsEngine::sampleVariance(values),
+        std::invalid_argument);
+}
+
+TEST(StatisticsEngineTest, ThrowsForSingleValueSampleStandardDeviation)
+{
+    const std::vector<double> values{
+        42.0};
+
+    EXPECT_THROW(
+        StatisticsEngine::sampleStandardDeviation(values),
+        std::invalid_argument);
+}
+
+TEST(StatisticsEngineTest, ThrowsForEmptySampleVariance)
+{
+    const std::vector<double> values;
+
+    EXPECT_THROW(
+        StatisticsEngine::sampleVariance(values),
+        std::invalid_argument);
+}
+
+TEST(StatisticsEngineTest, ThrowsForEmptySampleStandardDeviation)
+{
+    const std::vector<double> values;
+
+    EXPECT_THROW(
+        StatisticsEngine::sampleStandardDeviation(values),
+        std::invalid_argument);
+}
