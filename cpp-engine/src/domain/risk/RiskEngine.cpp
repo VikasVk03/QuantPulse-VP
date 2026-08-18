@@ -278,16 +278,11 @@ namespace quantpulse::domain::risk
 
         const double position =
             tailProbability *
-            static_cast<double>(n);
+            static_cast<double>(n - 1);
 
         const std::size_t lowerIndex =
             static_cast<std::size_t>(
                 std::floor(position));
-
-        if (position >= static_cast<double>(n))
-        {
-            return -sortedReturns.back();
-        }
 
         const std::size_t upperIndex =
             static_cast<std::size_t>(
@@ -335,47 +330,56 @@ namespace quantpulse::domain::risk
         }
 
         /*
-         * QuantPulse historical CVaR convention:
+         * Historical CVaR / Expected Shortfall:
          *
-         * Include the observations contained in the lower tail,
-         * plus the boundary observation when the tail size is an
-         * exact integer.
+         * Calculate the average loss over the worst
+         * (1 - confidenceLevel) fraction of observations.
          *
-         * Examples:
+         * A fractional boundary observation is partially
+         * included when the tail does not contain an integer
+         * number of observations.
          *
-         * tailSize = 1.0 -> tailCount = 2
-         * tailSize = 1.5 -> tailCount = 2
-         * tailSize = 2.0 -> tailCount = 3
+         * Example:
+         *
+         * returns = {-0.10, -0.08, -0.05, ...}
+         * confidence = 0.75
+         * n = 6
+         *
+         * tailSize = 1.5
+         *
+         * Include:
+         *   1.0 × 0.10
+         *   0.5 × 0.08
+         *
+         * CVaR = (0.10 + 0.04) / 1.5
+         *      = 0.093333...
          */
-        const std::size_t tailCount =
-            static_cast<std::size_t>(
-                std::floor(tailSize)) +
-            1;
 
-        double lossSum = 0.0;
-        std::size_t lossCount = 0;
+        double weightedLossSum = 0.0;
+        double remainingTail = tailSize;
 
         for (std::size_t i = 0;
-             i < tailCount && i < n;
+             i < n && remainingTail > 0.0;
              ++i)
         {
+            const double weight =
+                std::min(
+                    1.0,
+                    remainingTail);
+
             const double loss =
                 -sortedReturns[i];
 
             if (loss > 0.0)
             {
-                lossSum += loss;
-                ++lossCount;
+                weightedLossSum +=
+                    weight * loss;
             }
+
+            remainingTail -= weight;
         }
 
-        if (lossCount == 0)
-        {
-            return 0.0;
-        }
-
-        return lossSum /
-               static_cast<double>(lossCount);
+        return weightedLossSum / tailSize;
     }
 
 } // namespace quantpulse::domain::risk

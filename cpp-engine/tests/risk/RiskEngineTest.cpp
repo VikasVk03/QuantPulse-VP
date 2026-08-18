@@ -990,13 +990,24 @@ TEST(
         0.01,
         0.03};
 
-    const double expected = 0.075;
+    /*
+     * At 80% confidence:
+     *
+     * tail probability = 1 - 0.80 = 0.20
+     *
+     * tail size = 0.20 * 5 = 1 observation.
+     *
+     * Therefore the worst 20% consists of the
+     * -10% return.
+     *
+     * CVaR = 10%.
+     */
 
     EXPECT_NEAR(
         RiskEngine::historicalCVaR(
             returns,
             0.80),
-        expected,
+        0.10,
         1e-12);
 }
 
@@ -1014,7 +1025,21 @@ TEST(
 
     const double confidenceLevel = 0.75;
 
-    const double expected = 0.09;
+    /*
+     * tail size = (1 - 0.75) * 6
+     *           = 1.5 observations.
+     *
+     * Include:
+     *
+     * 1.0 × 10% loss
+     * 0.5 × 8% loss
+     *
+     * CVaR = (0.10 + 0.5 * 0.08) / 1.5
+     *      = 0.093333...
+     */
+
+    const double expected =
+        0.09333333333333333;
 
     EXPECT_NEAR(
         RiskEngine::historicalCVaR(

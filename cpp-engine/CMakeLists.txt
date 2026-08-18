@@ -23,6 +23,7 @@ add_library(
     src/domain/volatility/VolatilityEngine.cpp
     src/domain/risk/RiskEngine.cpp 
     src/domain/portfolio/PortfolioEngine.cpp
+    src/domain/microstructure/MarketMicrostructureEngine.cpp
 )
 
 target_include_directories(
@@ -65,6 +66,7 @@ add_executable(
     tests/volatility/VolatilityEngineTest.cpp
     tests/risk/RiskEngineTest.cpp
     tests/portfolio/PortfolioEngineTest.cpp  
+    tests/microstructure/MarketMicrostructureEngineTest.cpp
 )
 
 target_link_libraries(
@@ -102,6 +104,7 @@ add_executable(
     benchmarks/volatility/VolatilityEngineBenchmark.cpp
     benchmarks/risk/RiskEngineBenchmark.cpp
     benchmarks/portfolio/PortfolioEngineBenchmark.cpp
+    benchmarks/microstructure/MarketMicrostructureEngineBenchmark.cpp
 )
 
 target_link_libraries(
