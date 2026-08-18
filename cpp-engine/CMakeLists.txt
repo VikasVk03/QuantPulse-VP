@@ -51,6 +51,17 @@ target_link_libraries(
         quantpulse_core
 )
 
+add_executable(
+    quantpulse_cli
+    src/adapter/QuantPulseCLI.cpp
+)
+
+target_link_libraries(
+    quantpulse_cli
+    PRIVATE
+        quantpulse_core
+)
+
 # ----------------------------
 # Testing
 # ----------------------------
