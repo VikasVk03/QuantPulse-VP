@@ -212,6 +212,27 @@ namespace
             static_cast<int64_t>(size));
     }
 
+    static void BM_HISTORICAL_CVAR(benchmark::State &state)
+    {
+        const std::size_t size =
+            static_cast<std::size_t>(state.range(0));
+
+        const auto returns =
+            generateDeterministicReturns(size);
+
+        constexpr double confidenceLevel = 0.95;
+
+        for (auto _ : state)
+        {
+            const double result =
+                RiskEngine::historicalCVaR(
+                    returns,
+                    confidenceLevel);
+
+            benchmark::DoNotOptimize(result);
+        }
+    }
+
 } // namespace
 
 BENCHMARK(BM_SHARPE_RATIO)
@@ -247,5 +268,9 @@ BENCHMARK(BM_ALPHA)
     ->Range(1000, 1000000);
 
 BENCHMARK(BM_HISTORICAL_VAR)
+    ->RangeMultiplier(10)
+    ->Range(1000, 1000000);
+
+BENCHMARK(BM_HISTORICAL_CVAR)
     ->RangeMultiplier(10)
     ->Range(1000, 1000000);
