@@ -26,6 +26,7 @@ add_library(
     src/domain/microstructure/MarketMicrostructureEngine.cpp
     src/domain/features/FeatureEngine.cpp
     src/domain/signals/SignalEngine.cpp
+    src/domain/backtest/BacktestEngine.cpp
 )
 
 target_include_directories(
@@ -82,6 +83,7 @@ add_executable(
     tests/microstructure/MarketMicrostructureEngineTest.cpp
     tests/features/FeatureEngineTest.cpp
     tests/signals/SignalEngineTest.cpp
+    tests/backtest/BacktestEngineTest.cpp
 )
 
 target_link_libraries(
@@ -122,6 +124,7 @@ add_executable(
     benchmarks/microstructure/MarketMicrostructureEngineBenchmark.cpp
     benchmarks/features/FeatureEngineBenchmarks.cpp
     benchmarks/signals/SignalEngineBenchmark.cpp
+    benchmarks/backtest/BacktestEngineBenchmark.cpp
 )
 
 target_link_libraries(
