@@ -24,6 +24,8 @@ add_library(
     src/domain/risk/RiskEngine.cpp 
     src/domain/portfolio/PortfolioEngine.cpp
     src/domain/microstructure/MarketMicrostructureEngine.cpp
+    src/domain/features/FeatureEngine.cpp
+    src/domain/signals/SignalEngine.cpp
 )
 
 target_include_directories(
@@ -78,6 +80,8 @@ add_executable(
     tests/risk/RiskEngineTest.cpp
     tests/portfolio/PortfolioEngineTest.cpp  
     tests/microstructure/MarketMicrostructureEngineTest.cpp
+    tests/features/FeatureEngineTest.cpp
+    tests/signals/SignalEngineTest.cpp
 )
 
 target_link_libraries(
@@ -116,6 +120,8 @@ add_executable(
     benchmarks/risk/RiskEngineBenchmark.cpp
     benchmarks/portfolio/PortfolioEngineBenchmark.cpp
     benchmarks/microstructure/MarketMicrostructureEngineBenchmark.cpp
+    benchmarks/features/FeatureEngineBenchmarks.cpp
+    benchmarks/signals/SignalEngineBenchmark.cpp
 )
 
 target_link_libraries(
