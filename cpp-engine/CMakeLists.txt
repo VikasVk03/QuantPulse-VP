@@ -28,6 +28,7 @@ add_library(
     src/domain/signals/SignalEngine.cpp
     src/domain/strategy/StrategyEngine.cpp 
     src/domain/execution/ExecutionEngine.cpp
+    src/domain/sizing/PositionSizingEngine.cpp
     src/domain/backtest/BacktestEngine.cpp
     src/domain/performance/PerformanceEngine.cpp 
     src/domain/research/ResearchEngine.cpp
@@ -89,6 +90,7 @@ add_executable(
     tests/signals/SignalEngineTest.cpp
     tests/strategy/StrategyEngineTest.cpp
     tests/execution/ExecutionEngineTest.cpp
+    tests/sizing/PositionSizingEngineTest.cpp
     tests/backtest/BacktestEngineTest.cpp
     tests/performance/PerformanceEngineTest.cpp
     tests/research/ResearchEngineTest.cpp
@@ -134,6 +136,7 @@ add_executable(
     benchmarks/signals/SignalEngineBenchmark.cpp
     benchmarks/strategy/StrategyEngineBenchmark.cpp
     benchmarks/execution/ExecutionEngineBenchmark.cpp
+    benchmarks/sizing/PositionSizingEngineBenchmark.cpp
     benchmarks/backtest/BacktestEngineBenchmark.cpp
     benchmarks/performance/PerformanceEngineBenchmark.cpp
     benchmarks/research/ResearchEngineBenchmark.cpp
