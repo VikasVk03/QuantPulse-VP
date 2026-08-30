@@ -30,6 +30,7 @@ add_library(
     src/domain/execution/ExecutionEngine.cpp
     src/domain/sizing/PositionSizingEngine.cpp
     src/domain/risk_management/RiskManagementEngine.cpp
+    src/domain/trading/TradingEngine.cpp
     src/domain/backtest/BacktestEngine.cpp
     src/domain/performance/PerformanceEngine.cpp 
     src/domain/research/ResearchEngine.cpp
@@ -94,6 +95,7 @@ add_executable(
     tests/sizing/PositionSizingEngineTest.cpp
     tests/backtest/BacktestEngineTest.cpp
     tests/risk_management/RiskManagementEngineTest.cpp
+    tests/trading/TradingEngineTest.cpp
     tests/performance/PerformanceEngineTest.cpp
     tests/research/ResearchEngineTest.cpp
 )
@@ -140,6 +142,7 @@ add_executable(
     benchmarks/execution/ExecutionEngineBenchmark.cpp
     benchmarks/sizing/PositionSizingEngineBenchmark.cpp
     benchmarks/risk_management/RiskManagementEngineBenchmark.cpp
+    benchmarks/trading/TradingEngineBenchmark.cpp
     benchmarks/backtest/BacktestEngineBenchmark.cpp
     benchmarks/performance/PerformanceEngineBenchmark.cpp
     benchmarks/research/ResearchEngineBenchmark.cpp
