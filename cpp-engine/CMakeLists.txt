@@ -37,6 +37,7 @@ add_library(
     src/domain/portfolio_state/PortfolioStateEngine.cpp
     src/domain/orders/OrderManagementEngine.cpp
     src/domain/transaction_cost/TransactionCostEngine.cpp
+    src/domain/market_data/MarketDataEngine.cpp
 )
 
 target_include_directories(
@@ -104,6 +105,7 @@ add_executable(
     tests/portfolio_state/PortfolioStateEngineTest.cpp
     tests/orders/OrderManagementEngineTest.cpp
     tests/transaction_cost/TransactionCostEngineTest.cpp
+    tests/market_data/MarketDataEngineTest.cpp
 )
 
 target_link_libraries(
@@ -155,6 +157,7 @@ add_executable(
     benchmarks/portfolio_state/PortfolioStateEngineBenchmark.cpp
     benchmarks/orders/OrderManagementEngineBenchmark.cpp
     benchmarks/transaction_cost/TransactionCostEngineBenchmark.cpp
+    benchmarks/market_data/MarketDataEngineBenchmark.cpp
 )
 
 target_link_libraries(
