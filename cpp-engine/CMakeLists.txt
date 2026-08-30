@@ -28,6 +28,7 @@ add_library(
     src/domain/signals/SignalEngine.cpp
     src/domain/backtest/BacktestEngine.cpp
     src/domain/performance/PerformanceEngine.cpp 
+    src/domain/strategy/StrategyEngine.cpp 
 )
 
 target_include_directories(
