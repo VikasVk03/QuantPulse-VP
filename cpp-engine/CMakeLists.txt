@@ -35,6 +35,7 @@ add_library(
     src/domain/performance/PerformanceEngine.cpp 
     src/domain/research/ResearchEngine.cpp
     src/domain/portfolio_state/PortfolioStateEngine.cpp
+    src/domain/orders/OrderManagementEngine.cpp
 )
 
 target_include_directories(
@@ -100,6 +101,7 @@ add_executable(
     tests/performance/PerformanceEngineTest.cpp
     tests/research/ResearchEngineTest.cpp
     tests/portfolio_state/PortfolioStateEngineTest.cpp
+    tests/orders/OrderManagementEngineTest.cpp
 )
 
 target_link_libraries(
@@ -149,6 +151,7 @@ add_executable(
     benchmarks/performance/PerformanceEngineBenchmark.cpp
     benchmarks/research/ResearchEngineBenchmark.cpp
     benchmarks/portfolio_state/PortfolioStateEngineBenchmark.cpp
+    benchmarks/orders/OrderManagementEngineBenchmark.cpp
 )
 
 target_link_libraries(
