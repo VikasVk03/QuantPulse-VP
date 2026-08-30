@@ -34,6 +34,7 @@ add_library(
     src/domain/backtest/BacktestEngine.cpp
     src/domain/performance/PerformanceEngine.cpp 
     src/domain/research/ResearchEngine.cpp
+    src/domain/portfolio_state/PortfolioStateEngine.cpp
 )
 
 target_include_directories(
@@ -98,6 +99,7 @@ add_executable(
     tests/trading/TradingEngineTest.cpp
     tests/performance/PerformanceEngineTest.cpp
     tests/research/ResearchEngineTest.cpp
+    tests/portfolio_state/PortfolioStateEngineTest.cpp
 )
 
 target_link_libraries(
@@ -146,6 +148,7 @@ add_executable(
     benchmarks/backtest/BacktestEngineBenchmark.cpp
     benchmarks/performance/PerformanceEngineBenchmark.cpp
     benchmarks/research/ResearchEngineBenchmark.cpp
+    benchmarks/portfolio_state/PortfolioStateEngineBenchmark.cpp
 )
 
 target_link_libraries(
