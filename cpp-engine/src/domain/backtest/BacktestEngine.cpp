@@ -148,6 +148,10 @@ namespace quantpulse::domain::backtest
             validateObservation(observation);
         }
 
+        std::vector<double> tradeReturns;
+        tradeReturns.reserve(observations.size() / 2);
+        double entryPrice = 0.0;
+
         double cash = initialCapital;
         double shares = 0.0;
 
@@ -178,6 +182,8 @@ namespace quantpulse::domain::backtest
                     cash /
                     (observation.price * denominator);
 
+                entryPrice = observation.price;
+
                 const double tradedNotional =
                     shares * observation.price;
 
@@ -205,6 +211,19 @@ namespace quantpulse::domain::backtest
                 cash +=
                     tradedNotional -
                     transactionCost;
+
+                const double grossTradeReturn =
+                    observation.price /
+                        entryPrice -
+                    1.0;
+
+                const double netTradeReturn =
+                    ((1.0 - transactionCostRate) *
+                     (1.0 + grossTradeReturn) /
+                     (1.0 + transactionCostRate)) -
+                    1.0;
+
+                tradeReturns.push_back(netTradeReturn);
 
                 shares = 0.0;
 
@@ -245,7 +264,8 @@ namespace quantpulse::domain::backtest
             maximumDrawdown,
             sharpeRatio,
             numberOfTrades,
-            std::move(equityCurve)};
+            std::move(equityCurve),
+            std::move(tradeReturns)};
     }
 
 } // namespace quantpulse::domain::backtest

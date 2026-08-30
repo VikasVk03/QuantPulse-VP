@@ -29,6 +29,7 @@ namespace quantpulse::domain::backtest
         std::size_t numberOfTrades;
 
         std::vector<double> equityCurve;
+        std::vector<double> tradeReturn;
     };
 
     class BacktestEngine
