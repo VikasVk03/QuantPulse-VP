@@ -5,6 +5,7 @@
 #include "quantpulse/domain/risk/RiskEngine.hpp"
 #include "quantpulse/domain/volatility/VolatilityEngine.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 
@@ -31,7 +32,39 @@ namespace quantpulse::domain::features
             }
         }
 
-    }
+        double calculateSortinoFeature(
+            const std::vector<double> &returns)
+        {
+            double squaredDownsideSum = 0.0;
+
+            for (const double value : returns)
+            {
+                const double downside =
+                    std::min(value, 0.0);
+
+                squaredDownsideSum +=
+                    downside * downside;
+            }
+
+            if (squaredDownsideSum == 0.0)
+            {
+                /*
+                 * There are no negative returns in the window.
+                 *
+                 * Sortino is mathematically undefined because
+                 * downside deviation is zero. For feature generation,
+                 * use a neutral bounded value instead of allowing
+                 * the entire research pipeline to fail.
+                 */
+                return 0.0;
+            }
+
+            return quantpulse::domain::risk::RiskEngine::sortinoRatio(
+                returns,
+                0.0);
+        }
+
+    } // namespace
 
     FeatureVector FeatureEngine::generate(
         const std::vector<double> &prices,
@@ -69,9 +102,8 @@ namespace quantpulse::domain::features
                 0.0);
 
         features.sortinoRatio =
-            RiskEngine::sortinoRatio(
-                returns,
-                0.0);
+            calculateSortinoFeature(
+                returns);
 
         features.maximumDrawdown =
             RiskEngine::maximumDrawdown(
