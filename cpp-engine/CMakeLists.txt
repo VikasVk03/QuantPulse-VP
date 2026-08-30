@@ -26,9 +26,10 @@ add_library(
     src/domain/microstructure/MarketMicrostructureEngine.cpp
     src/domain/features/FeatureEngine.cpp
     src/domain/signals/SignalEngine.cpp
+    src/domain/strategy/StrategyEngine.cpp 
+    src/domain/execution/ExecutionEngine.cpp
     src/domain/backtest/BacktestEngine.cpp
     src/domain/performance/PerformanceEngine.cpp 
-    src/domain/strategy/StrategyEngine.cpp 
     src/domain/research/ResearchEngine.cpp
 )
 
@@ -86,9 +87,10 @@ add_executable(
     tests/microstructure/MarketMicrostructureEngineTest.cpp
     tests/features/FeatureEngineTest.cpp
     tests/signals/SignalEngineTest.cpp
+    tests/strategy/StrategyEngineTest.cpp
+    tests/execution/ExecutionEngineTest.cpp
     tests/backtest/BacktestEngineTest.cpp
     tests/performance/PerformanceEngineTest.cpp
-    tests/strategy/StrategyEngineTest.cpp
     tests/research/ResearchEngineTest.cpp
 )
 
@@ -130,9 +132,10 @@ add_executable(
     benchmarks/microstructure/MarketMicrostructureEngineBenchmark.cpp
     benchmarks/features/FeatureEngineBenchmarks.cpp
     benchmarks/signals/SignalEngineBenchmark.cpp
+    benchmarks/strategy/StrategyEngineBenchmark.cpp
+    benchmarks/execution/ExecutionEngineBenchmark.cpp
     benchmarks/backtest/BacktestEngineBenchmark.cpp
     benchmarks/performance/PerformanceEngineBenchmark.cpp
-    benchmarks/strategy/StrategyEngineBenchmark.cpp
     benchmarks/research/ResearchEngineBenchmark.cpp
 )
 
