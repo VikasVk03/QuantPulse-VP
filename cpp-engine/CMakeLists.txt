@@ -38,6 +38,7 @@ add_library(
     src/domain/orders/OrderManagementEngine.cpp
     src/domain/transaction_cost/TransactionCostEngine.cpp
     src/domain/market_data/MarketDataEngine.cpp
+    src/domain/market_data_buffer/MarketDataBufferEngine.cpp
 )
 
 target_include_directories(
@@ -106,6 +107,7 @@ add_executable(
     tests/orders/OrderManagementEngineTest.cpp
     tests/transaction_cost/TransactionCostEngineTest.cpp
     tests/market_data/MarketDataEngineTest.cpp
+    tests/market_data_buffer/MarketDataBufferEngineTest.cpp
 )
 
 target_link_libraries(
@@ -158,6 +160,7 @@ add_executable(
     benchmarks/orders/OrderManagementEngineBenchmark.cpp
     benchmarks/transaction_cost/TransactionCostEngineBenchmark.cpp
     benchmarks/market_data/MarketDataEngineBenchmark.cpp
+    benchmarks/market_data_buffer/MarketDataBufferEngineBenchmark.cpp
 )
 
 target_link_libraries(
