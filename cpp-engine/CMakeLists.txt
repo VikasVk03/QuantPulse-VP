@@ -85,6 +85,8 @@ add_executable(
     tests/features/FeatureEngineTest.cpp
     tests/signals/SignalEngineTest.cpp
     tests/backtest/BacktestEngineTest.cpp
+    tests/performance/PerformanceEngineTest.cpp
+    tests/strategy/StrategyEngineTest.cpp
 )
 
 target_link_libraries(
@@ -126,6 +128,8 @@ add_executable(
     benchmarks/features/FeatureEngineBenchmarks.cpp
     benchmarks/signals/SignalEngineBenchmark.cpp
     benchmarks/backtest/BacktestEngineBenchmark.cpp
+    benchmarks/performance/PerformanceEngineBenchmark.cpp
+    benchmarks/strategy/StrategyEngineBenchmark.cpp
 )
 
 target_link_libraries(
