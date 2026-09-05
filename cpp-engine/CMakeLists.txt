@@ -44,6 +44,7 @@ add_library(
     src/domain/events/EventBusEngine.cpp
     src/domain/time_series/TimeSeriesEngine.cpp
     src/domain/rolling_window/RollingWindowEngine.cpp
+    src/domain/order_book/OrderBookEngine.cpp
 )
 
 target_include_directories(
@@ -118,6 +119,7 @@ add_executable(
     tests/events/EventBusEngineTest.cpp
     tests/time_series/TimeSeriesEngineTest.cpp
     tests/rolling_window/RollingWindowEngineTest.cpp
+    tests/order_book/OrderBookEngineTest.cpp
 )
 
 target_link_libraries(
@@ -176,6 +178,7 @@ add_executable(
     benchmarks/events/EventBusEngineBenchmark.cpp
     benchmarks/time_series/TimeSeriesEngineBenchmark.cpp
     benchmarks/rolling_window/RollingWindowEngineBenchmark.cpp
+    benchmarks/order_book/OrderBookEngineBenchmark.cpp
 )
 
 target_link_libraries(
