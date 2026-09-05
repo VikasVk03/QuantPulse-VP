@@ -40,6 +40,7 @@ add_library(
     src/domain/market_data/MarketDataEngine.cpp
     src/domain/market_data_buffer/MarketDataBufferEngine.cpp
     src/domain/position/PositionEngine.cpp
+    src/domain/indicators/IndicatorEngine.cpp
 )
 
 target_include_directories(
@@ -110,6 +111,7 @@ add_executable(
     tests/market_data/MarketDataEngineTest.cpp
     tests/market_data_buffer/MarketDataBufferEngineTest.cpp
     tests/position/PositionEngineTest.cpp
+    tests/indicators/IndicatorEngineTest.cpp
 )
 
 target_link_libraries(
@@ -164,6 +166,7 @@ add_executable(
     benchmarks/market_data/MarketDataEngineBenchmark.cpp
     benchmarks/market_data_buffer/MarketDataBufferEngineBenchmark.cpp
     benchmarks/position/PositionEngineBenchmark.cpp
+    benchmarks/indicators/IndicatorEngineBenchmark.cpp
 )
 
 target_link_libraries(
