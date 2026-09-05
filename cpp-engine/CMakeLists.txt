@@ -43,6 +43,7 @@ add_library(
     src/domain/indicators/IndicatorEngine.cpp
     src/domain/events/EventBusEngine.cpp
     src/domain/time_series/TimeSeriesEngine.cpp
+    src/domain/rolling_window/RollingWindowEngine.cpp
 )
 
 target_include_directories(
@@ -116,6 +117,7 @@ add_executable(
     tests/indicators/IndicatorEngineTest.cpp
     tests/events/EventBusEngineTest.cpp
     tests/time_series/TimeSeriesEngineTest.cpp
+    tests/rolling_window/RollingWindowEngineTest.cpp
 )
 
 target_link_libraries(
@@ -173,6 +175,7 @@ add_executable(
     benchmarks/indicators/IndicatorEngineBenchmark.cpp
     benchmarks/events/EventBusEngineBenchmark.cpp
     benchmarks/time_series/TimeSeriesEngineBenchmark.cpp
+    benchmarks/rolling_window/RollingWindowEngineBenchmark.cpp
 )
 
 target_link_libraries(
