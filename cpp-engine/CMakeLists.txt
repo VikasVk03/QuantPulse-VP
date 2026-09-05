@@ -39,6 +39,7 @@ add_library(
     src/domain/transaction_cost/TransactionCostEngine.cpp
     src/domain/market_data/MarketDataEngine.cpp
     src/domain/market_data_buffer/MarketDataBufferEngine.cpp
+    src/domain/position/PositionEngine.cpp
 )
 
 target_include_directories(
@@ -108,6 +109,7 @@ add_executable(
     tests/transaction_cost/TransactionCostEngineTest.cpp
     tests/market_data/MarketDataEngineTest.cpp
     tests/market_data_buffer/MarketDataBufferEngineTest.cpp
+    tests/position/PositionEngineTest.cpp
 )
 
 target_link_libraries(
@@ -161,6 +163,7 @@ add_executable(
     benchmarks/transaction_cost/TransactionCostEngineBenchmark.cpp
     benchmarks/market_data/MarketDataEngineBenchmark.cpp
     benchmarks/market_data_buffer/MarketDataBufferEngineBenchmark.cpp
+    benchmarks/position/PositionEngineBenchmark.cpp
 )
 
 target_link_libraries(
