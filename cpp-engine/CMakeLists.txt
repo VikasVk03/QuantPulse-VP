@@ -42,6 +42,7 @@ add_library(
     src/domain/position/PositionEngine.cpp
     src/domain/indicators/IndicatorEngine.cpp
     src/domain/events/EventBusEngine.cpp
+    src/domain/time_series/TimeSeriesEngine.cpp
 )
 
 target_include_directories(
@@ -114,6 +115,7 @@ add_executable(
     tests/position/PositionEngineTest.cpp
     tests/indicators/IndicatorEngineTest.cpp
     tests/events/EventBusEngineTest.cpp
+    tests/time_series/TimeSeriesEngineTest.cpp
 )
 
 target_link_libraries(
@@ -170,6 +172,7 @@ add_executable(
     benchmarks/position/PositionEngineBenchmark.cpp
     benchmarks/indicators/IndicatorEngineBenchmark.cpp
     benchmarks/events/EventBusEngineBenchmark.cpp
+    benchmarks/time_series/TimeSeriesEngineBenchmark.cpp
 )
 
 target_link_libraries(
