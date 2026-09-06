@@ -70,8 +70,8 @@ temp/
 # Generated datasets
 # ==============================
 
-data/raw/
-data/processed/
+# data/raw/
+# data/processed/
 
 # ==============================
 # Benchmark results

@@ -50,6 +50,8 @@ add_library(
     src/domain/latency/LatencyEngine.cpp
     src/domain/order_flow/OrderFlowEngine.cpp
     src/domain/liquidity/LiquidityEngine.cpp
+    src/infrastructure/market_data/CsvMarketDataReader.cpp
+    src/application/analytics/MarketDataAnalytics.cpp
 )
 
 target_include_directories(
@@ -131,6 +133,7 @@ add_executable(
     tests/integration/EndToEndTradingTest.cpp
     tests/order_flow/OrderFlowEngineTest.cpp
     tests/liquidity/LiquidityEngineTest.cpp
+    tests/application/MarketDataAnalyticsTest.cpp
 )
 
 target_link_libraries(

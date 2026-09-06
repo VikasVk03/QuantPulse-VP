@@ -1,33 +1,71 @@
-#include "quantpulse/domain/risk/RiskEngine.hpp"
+#include "quantpulse/application/analytics/MarketDataAnalytics.hpp"
+#include "quantpulse/infrastructure/market_data/CsvMarketDataReader.hpp"
 
+#include <exception>
+#include <iomanip>
 #include <iostream>
-#include <vector>
+#include <string>
 
-int main()
+int main(int argc, char *argv[])
 {
-    using quantpulse::domain::risk::RiskEngine;
-
-    std::vector<double> returns;
-
-    double value;
-
-    while (std::cin >> value)
+    if (argc != 3 ||
+        std::string(argv[1]) != "analyze")
     {
-        returns.push_back(value);
-    }
+        std::cerr
+            << "Usage: quantpulse_cli analyze <market-data.csv>\n";
 
-    if (returns.empty())
-    {
-        std::cerr << "No return observations provided.\n";
         return 1;
     }
 
-    const double result =
-        RiskEngine::sharpeRatio(
-            returns,
-            0.002);
+    const std::string filePath = argv[2];
 
-    std::cout << result << '\n';
+    try
+    {
+        const auto observations =
+            quantpulse::infrastructure::market_data::
+                CsvMarketDataReader::read(filePath);
 
-    return 0;
+        const auto report =
+            quantpulse::application::analytics::
+                MarketDataAnalytics::analyze(
+                    "RELIANCE",
+                    observations);
+
+        std::cout
+            << "\n"
+            << "========================================\n"
+            << "       QUANTPULSE MARKET ANALYSIS       \n"
+            << "========================================\n"
+            << "Symbol              "
+            << report.symbol << '\n'
+            << "Observations        "
+            << report.observationCount << '\n'
+            << "First Price         "
+            << std::fixed
+            << std::setprecision(2)
+            << report.firstPrice << '\n'
+            << "Last Price          "
+            << report.lastPrice << '\n'
+            << "Return (%)          "
+            << report.returnPercentage << '\n'
+            << "Total Volume        "
+            << report.totalVolume << '\n'
+            << "Average Volume      "
+            << report.averageVolume << '\n'
+            << "Volatility          "
+            << report.volatility << '\n'
+            << "========================================\n"
+            << '\n';
+
+        return 0;
+    }
+    catch (const std::exception &exception)
+    {
+        std::cerr
+            << "QuantPulse error: "
+            << exception.what()
+            << '\n';
+
+        return 1;
+    }
 }
