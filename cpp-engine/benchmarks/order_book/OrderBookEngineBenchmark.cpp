@@ -145,6 +145,48 @@ static void BM_ORDER_BOOK_DEPTH(
     }
 }
 
+static void BM_ORDER_BOOK_BID_LEVEL(
+    benchmark::State &state)
+{
+    OrderBookEngine engine;
+
+    for (int i = 0; i < 10; ++i)
+    {
+        engine.updateBid(
+            100.0 - static_cast<double>(i),
+            10.0);
+    }
+
+    for (auto _ : state)
+    {
+        const auto level =
+            engine.bidLevel(5);
+
+        benchmark::DoNotOptimize(level);
+    }
+}
+
+static void BM_ORDER_BOOK_ASK_LEVEL(
+    benchmark::State &state)
+{
+    OrderBookEngine engine;
+
+    for (int i = 0; i < 10; ++i)
+    {
+        engine.updateAsk(
+            100.0 + static_cast<double>(i),
+            10.0);
+    }
+
+    for (auto _ : state)
+    {
+        const auto level =
+            engine.askLevel(5);
+
+        benchmark::DoNotOptimize(level);
+    }
+}
+
 BENCHMARK(BM_ORDER_BOOK_UPDATE_BID);
 
 BENCHMARK(BM_ORDER_BOOK_UPDATE_ASK);
@@ -168,3 +210,6 @@ BENCHMARK(BM_ORDER_BOOK_DEPTH)
     ->Arg(16)
     ->Arg(64)
     ->Arg(256);
+
+BENCHMARK(BM_ORDER_BOOK_BID_LEVEL);
+BENCHMARK(BM_ORDER_BOOK_ASK_LEVEL);

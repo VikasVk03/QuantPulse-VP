@@ -11,6 +11,12 @@ namespace quantpulse::domain::order_book
         double quantity = 0.0;
     };
 
+    struct OrderBookLevel
+    {
+        double price = 0.0;
+        double quantity = 0.0;
+    };
+
     class OrderBookEngine
     {
     public:
@@ -24,9 +30,11 @@ namespace quantpulse::domain::order_book
             double price,
             double quantity);
 
-        void removeBid(double price);
+        void removeBid(
+            double price);
 
-        void removeAsk(double price);
+        void removeAsk(
+            double price);
 
         [[nodiscard]]
         double bestBid() const;
@@ -41,16 +49,26 @@ namespace quantpulse::domain::order_book
         double midPrice() const;
 
         [[nodiscard]]
-        double bidDepth(std::size_t levels) const;
+        double bidDepth(
+            std::size_t levels) const;
 
         [[nodiscard]]
-        double askDepth(std::size_t levels) const;
+        double askDepth(
+            std::size_t levels) const;
 
         [[nodiscard]]
         std::size_t bidLevelCount() const noexcept;
 
         [[nodiscard]]
         std::size_t askLevelCount() const noexcept;
+
+        [[nodiscard]]
+        OrderBookLevel bidLevel(
+            std::size_t index) const;
+
+        [[nodiscard]]
+        OrderBookLevel askLevel(
+            std::size_t index) const;
 
         void clear() noexcept;
 

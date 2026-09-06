@@ -8,7 +8,8 @@ namespace quantpulse::domain::order_book
 {
     namespace
     {
-        void validatePrice(double price)
+        void validatePrice(
+            double price)
         {
             if (!std::isfinite(price) || price <= 0.0)
             {
@@ -17,7 +18,8 @@ namespace quantpulse::domain::order_book
             }
         }
 
-        void validateQuantity(double quantity)
+        void validateQuantity(
+            double quantity)
         {
             if (!std::isfinite(quantity) || quantity < 0.0)
             {
@@ -93,7 +95,9 @@ namespace quantpulse::domain::order_book
         validateQuantity(quantity);
 
         auto iterator =
-            findLevel(bids_, price);
+            findLevel(
+                bids_,
+                price);
 
         if (quantity == 0.0)
         {
@@ -128,7 +132,9 @@ namespace quantpulse::domain::order_book
         validateQuantity(quantity);
 
         auto iterator =
-            findLevel(asks_, price);
+            findLevel(
+                asks_,
+                price);
 
         if (quantity == 0.0)
         {
@@ -161,7 +167,9 @@ namespace quantpulse::domain::order_book
         validatePrice(price);
 
         auto iterator =
-            findLevel(bids_, price);
+            findLevel(
+                bids_,
+                price);
 
         if (iterator != bids_.end())
         {
@@ -175,7 +183,9 @@ namespace quantpulse::domain::order_book
         validatePrice(price);
 
         auto iterator =
-            findLevel(asks_, price);
+            findLevel(
+                asks_,
+                price);
 
         if (iterator != asks_.end())
         {
@@ -231,16 +241,46 @@ namespace quantpulse::domain::order_book
             levels);
     }
 
-    std::size_t OrderBookEngine::bidLevelCount()
-        const noexcept
+    std::size_t
+    OrderBookEngine::bidLevelCount() const noexcept
     {
         return bids_.size();
     }
 
-    std::size_t OrderBookEngine::askLevelCount()
-        const noexcept
+    std::size_t
+    OrderBookEngine::askLevelCount() const noexcept
     {
         return asks_.size();
+    }
+
+    OrderBookLevel
+    OrderBookEngine::bidLevel(
+        std::size_t index) const
+    {
+        if (index >= bids_.size())
+        {
+            throw std::out_of_range(
+                "Bid level index out of range.");
+        }
+
+        return OrderBookLevel{
+            bids_[index].price,
+            bids_[index].quantity};
+    }
+
+    OrderBookLevel
+    OrderBookEngine::askLevel(
+        std::size_t index) const
+    {
+        if (index >= asks_.size())
+        {
+            throw std::out_of_range(
+                "Ask level index out of range.");
+        }
+
+        return OrderBookLevel{
+            asks_[index].price,
+            asks_[index].quantity};
     }
 
     void OrderBookEngine::clear() noexcept

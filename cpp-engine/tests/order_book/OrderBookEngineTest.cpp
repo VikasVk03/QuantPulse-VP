@@ -264,3 +264,100 @@ TEST(OrderBookEngineTest, ClearRemovesBothSides)
     EXPECT_EQ(book.bidLevelCount(), 0U);
     EXPECT_EQ(book.askLevelCount(), 0U);
 }
+
+TEST(OrderBookEngineTest, ReturnsBidLevelsInPricePriorityOrder)
+{
+    OrderBookEngine engine;
+
+    engine.updateBid(100.0, 10.0);
+    engine.updateBid(101.0, 5.0);
+    engine.updateBid(99.0, 20.0);
+
+    const auto level0 = engine.bidLevel(0);
+    const auto level1 = engine.bidLevel(1);
+    const auto level2 = engine.bidLevel(2);
+
+    EXPECT_DOUBLE_EQ(level0.price, 101.0);
+    EXPECT_DOUBLE_EQ(level0.quantity, 5.0);
+
+    EXPECT_DOUBLE_EQ(level1.price, 100.0);
+    EXPECT_DOUBLE_EQ(level1.quantity, 10.0);
+
+    EXPECT_DOUBLE_EQ(level2.price, 99.0);
+    EXPECT_DOUBLE_EQ(level2.quantity, 20.0);
+}
+
+TEST(OrderBookEngineTest, ReturnsAskLevelsInPricePriorityOrder)
+{
+    OrderBookEngine engine;
+
+    engine.updateAsk(103.0, 10.0);
+    engine.updateAsk(101.0, 5.0);
+    engine.updateAsk(102.0, 20.0);
+
+    const auto level0 = engine.askLevel(0);
+    const auto level1 = engine.askLevel(1);
+    const auto level2 = engine.askLevel(2);
+
+    EXPECT_DOUBLE_EQ(level0.price, 101.0);
+    EXPECT_DOUBLE_EQ(level0.quantity, 5.0);
+
+    EXPECT_DOUBLE_EQ(level1.price, 102.0);
+    EXPECT_DOUBLE_EQ(level1.quantity, 20.0);
+
+    EXPECT_DOUBLE_EQ(level2.price, 103.0);
+    EXPECT_DOUBLE_EQ(level2.quantity, 10.0);
+}
+
+TEST(OrderBookEngineTest, RejectsInvalidBidLevelIndex)
+{
+    OrderBookEngine engine;
+
+    engine.updateBid(100.0, 10.0);
+
+    EXPECT_THROW(
+        engine.bidLevel(1),
+        std::out_of_range);
+}
+
+TEST(OrderBookEngineTest, RejectsInvalidAskLevelIndex)
+{
+    OrderBookEngine engine;
+
+    engine.updateAsk(101.0, 10.0);
+
+    EXPECT_THROW(
+        engine.askLevel(1),
+        std::out_of_range);
+}
+
+TEST(OrderBookEngineTest, ReturnsUpdatedLevelQuantity)
+{
+    OrderBookEngine engine;
+
+    engine.updateBid(100.0, 10.0);
+    engine.updateBid(100.0, 25.0);
+
+    const auto level = engine.bidLevel(0);
+
+    EXPECT_DOUBLE_EQ(level.price, 100.0);
+    EXPECT_DOUBLE_EQ(level.quantity, 25.0);
+}
+
+TEST(OrderBookEngineTest, BidLevelOnEmptyBookThrows)
+{
+    OrderBookEngine book;
+
+    EXPECT_THROW(
+        book.bidLevel(0),
+        std::out_of_range);
+}
+
+TEST(OrderBookEngineTest, AskLevelOnEmptyBookThrows)
+{
+    OrderBookEngine book;
+
+    EXPECT_THROW(
+        book.askLevel(0),
+        std::out_of_range);
+}
