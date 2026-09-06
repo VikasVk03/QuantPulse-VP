@@ -9,6 +9,12 @@
 namespace quantpulse::application::analytics
 {
 
+    struct MarketSeriesPoint
+    {
+        std::int64_t timestamp = 0;
+        double price = 0.0;
+        double volume = 0.0;
+    };
     struct MarketAnalyticsReport
     {
         std::string symbol;
@@ -23,6 +29,8 @@ namespace quantpulse::application::analytics
 
         double returnPercentage = 0.0;
         double volatility = 0.0;
+
+        std::vector<MarketSeriesPoint> series;
     };
 
     class MarketDataAnalytics

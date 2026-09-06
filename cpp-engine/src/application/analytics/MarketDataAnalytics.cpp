@@ -3,6 +3,7 @@
 #include "quantpulse/domain/returns/ReturnsEngine.hpp"
 #include "quantpulse/domain/volatility/VolatilityEngine.hpp"
 
+#include <utility>
 #include <stdexcept>
 #include <vector>
 
@@ -32,10 +33,19 @@ namespace quantpulse::application::analytics
 
         double totalVolume = 0.0;
 
+        std::vector<MarketSeriesPoint> series;
+        series.reserve(observations.size());
+
         for (const auto &observation : observations)
         {
             prices.push_back(observation.price);
             totalVolume += observation.volume;
+
+            series.push_back(
+                MarketSeriesPoint{
+                    .timestamp = observation.timestamp,
+                    .price = observation.price,
+                    .volume = observation.volume});
         }
 
         const double firstPrice = prices.front();
@@ -72,7 +82,8 @@ namespace quantpulse::application::analytics
                 totalVolume /
                 static_cast<double>(observations.size()),
             .returnPercentage = returnPercentage,
-            .volatility = volatility};
+            .volatility = volatility,
+            .series = std::move(series)};
     }
 
 } // namespace quantpulse::application::analytics

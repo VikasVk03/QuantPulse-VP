@@ -21,8 +21,26 @@ namespace quantpulse::infrastructure::serialization
              << "\"totalVolume\":" << report.totalVolume << ","
              << "\"averageVolume\":" << report.averageVolume << ","
              << "\"returnPercentage\":" << report.returnPercentage << ","
-             << "\"volatility\":" << report.volatility
-             << "}";
+             << "\"volatility\":" << report.volatility << ","
+             << "\"series\":[";
+
+        for (std::size_t i = 0; i < report.series.size(); ++i)
+        {
+            const auto &point = report.series[i];
+
+            if (i > 0)
+            {
+                json << ",";
+            }
+
+            json << "{"
+                 << "\"timestamp\":" << point.timestamp << ","
+                 << "\"price\":" << point.price << ","
+                 << "\"volume\":" << point.volume
+                 << "}";
+        }
+
+        json << "]}";
 
         return json.str();
     }
