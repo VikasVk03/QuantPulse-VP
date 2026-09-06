@@ -46,6 +46,7 @@ add_library(
     src/domain/rolling_window/RollingWindowEngine.cpp
     src/domain/order_book/OrderBookEngine.cpp
     src/domain/matching/MatchingEngine.cpp
+    src/domain/latency/LatencyEngine.cpp
 )
 
 target_include_directories(
@@ -122,6 +123,7 @@ add_executable(
     tests/rolling_window/RollingWindowEngineTest.cpp
     tests/order_book/OrderBookEngineTest.cpp
     tests/matching/MatchingEngineTest.cpp
+    tests/latency/LatencyEngineTest.cpp
 )
 
 target_link_libraries(
@@ -182,6 +184,7 @@ add_executable(
     benchmarks/rolling_window/RollingWindowEngineBenchmark.cpp
     benchmarks/order_book/OrderBookEngineBenchmark.cpp
     benchmarks/matching/MatchingEngineBenchmark.cpp
+    benchmarks/latency/LatencyEngineBenchmark.cpp
 )
 
 target_link_libraries(
