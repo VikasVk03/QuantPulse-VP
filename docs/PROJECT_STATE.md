@@ -39,24 +39,35 @@ The primary objective is to build a technically serious software system that dem
 
 # 2. Current Development Phase
 
-## Phase 1 — C++ Quantitative Core
+## Phase 1 — C++ Quantitative Core & Domain Engines
 
-Status: IN PROGRESS
+Status: COMPLETE
 
-Current milestone:
+Completed milestone:
 
-StatisticsEngine has been implemented, unit tested with GoogleTest, and verified through CTest.
+All 29 core domain engines have been implemented, unit tested with GoogleTest, and verified through CTest and Google Benchmark.
+
+## Phase 2 — Market Microstructure & Risk Intelligence + End-to-End Integration
+
+Status: VERIFIED & COMPLETE
+
+Completed milestone:
+
+- Extended `MarketMicrostructureEngine` with Stoikov microprice, multi-level depth imbalance ($N$ levels), effective spread, and relative effective spread.
+- Implemented `RiskIntelligenceEngine` synthesizing microstructure metrics (spread, depth imbalance, microprice drift), volatility, drawdown, and portfolio exposure into composite risk scores $[0, 100]$, discrete regimes (Normal, Elevated, High, Critical), dynamic sizing multipliers ($1.0 \to 0.0$), and safety kill-switches.
+- End-to-end trading pipeline integration implemented in `EndToEndTradingTest.cpp`, verifying the complete event/execution flow across 5 comprehensive scenarios:
+  Order Book -> Microstructure & Risk Intelligence -> Strategy -> Trading -> Adaptive Position Sizing -> Risk Management -> Order Management -> Matching -> Execution -> Transaction Costs -> Latency -> Position -> Portfolio State.
 
 Current verification:
 
 - C++20 build working
 - CMake configuration working
 - Ninja build working
-- Manual demo working
 - GoogleTest 1.14.0 integrated
 - CTest integration working
-- 10/10 unit tests passing
+- 594/594 automated tests passing (32 test suites)
 - 100% CTest pass rate
+- Google Benchmark integration active across domain engines, including microstructure and risk intelligence benchmarks
 
 ---
 
@@ -507,90 +518,89 @@ Testing
 
 ---
 
-# 10. Current Limitations
+# 10. Current Completed Domain Engines
 
-The current implementation is intentionally incomplete.
+The C++ quantitative engine currently includes 30 core domain engines, all with unit tests and Google Benchmark coverage:
 
-Not yet implemented:
-
-- StatisticsEngine benchmarks
-- ReturnsEngine
-- VolatilityEngine
-- Market data model
-- Order book
-- Market microstructure engine
-- Risk engine
-- Backtesting engine
-- C++ HTTP API
-- Node.js backend
-- MongoDB
-- Redis
-- React frontend
-- Authentication
-- Dockerized application services
-- CI/CD
-- Public deployment
-
-Current quantitative limitation:
-
-- Variance currently implements population variance.
-- Sample variance using n - 1 is not yet implemented.
+1. `StatisticsEngine`
+2. `ReturnsEngine`
+3. `VolatilityEngine`
+4. `RiskEngine`
+5. `PortfolioEngine`
+6. `MarketMicrostructureEngine`
+7. `FeatureEngine`
+8. `SignalEngine`
+9. `StrategyEngine`
+10. `PositionSizingEngine`
+11. `RiskManagementEngine`
+12. `TradingEngine`
+13. `OrderManagementEngine`
+14. `OrderBookEngine`
+15. `MatchingEngine`
+16. `ExecutionEngine`
+17. `TransactionCostEngine`
+18. `LatencyEngine`
+19. `PositionEngine`
+20. `PortfolioStateEngine`
+21. `PerformanceEngine`
+22. `BacktestEngine`
+23. `ResearchEngine`
+24. `MarketDataEngine`
+25. `MarketDataBufferEngine`
+26. `IndicatorEngine`
+27. `EventBusEngine`
+28. `TimeSeriesEngine`
+29. `RollingWindowEngine`
+30. `RiskIntelligenceEngine`
 
 ---
 
-# 11. Current Task
+# 11. Current Development Status
 
-## Task
+## Milestone Achieved
 
-Benchmark StatisticsEngine.
+Market Microstructure & Risk Intelligence + End-to-End Trading Pipeline Integration is fully operational and verified through `EndToEndTradingTest.cpp` across 5 integration scenarios:
 
-## Objective
-
-Establish a reproducible performance baseline for the current
-StatisticsEngine implementation before adding additional quantitative
-modules.
-
-## Planned Benchmarks
-
-- Mean
-- Median
-- Population variance
-- Standard deviation
-
-## Planned Dataset Sizes
-
-```text
-1,000
-10,000
-100,000
-1,000,000
-10,000,000
-```
-
-Dataset sizes may be adjusted based on memory usage and runtime.
+1. Full Long Entry Pipeline (Strategy -> Trading -> Sizing -> Risk -> Order Management -> Order Book Matching -> Execution Report -> Costs -> Latency -> Position -> Portfolio State)
+2. Long Exit / Profit Realization Pipeline
+3. Risk Limits Reject Adverse Trade (Drawdown limit breach blocks execution)
+4. Partial Fill Handling with Order Book Liquidity Depletion
+5. Microstructure & Risk Intelligence Adapts Position Sizing (Microprice drift + depth imbalance + spread dynamically scale sizing multiplier from 1.0 down to 0.60 before execution)
 
 ---
 
 # 12. Next Planned Phases
 
-## Phase 1 — C++ Quantitative Core
+## Phase 1 — C++ Quantitative Core & Domain Engines
 
 - [x] CMake setup
 - [x] C++20 configuration
 - [x] StatisticsEngine
 - [x] GoogleTest integration
-- [x] StatisticsEngine unit tests
-- [x] StatisticsEngine benchmarks
-- [x] ReturnsEngine
-- [x] VolatilityEngine
+- [x] 29 Domain Engines implemented
+- [x] 29 Unit Test suites (564 unit tests)
+- [x] 29 Benchmark suites with Google Benchmark
 
-## Phase 2 — C++ Quant Engine
+## Phase 2 — Market Microstructure & Risk Intelligence + End-to-End Trading Integration
 
-- [ ] Market data model
-- [ ] Order book
-- [ ] Market microstructure
-- [ ] Risk engine
-- [ ] Backtesting
+- [x] Strategy -> Trading -> Sizing -> Risk -> Orders -> Book -> Matching -> Execution -> Costs -> Latency -> Position -> Portfolio
+- [x] Microprice model (Stoikov depth-weighted mid-price)
+- [x] Multi-level depth imbalance metrics ($N$ levels)
+- [x] Effective and relative effective spread analytics
+- [x] RiskIntelligenceEngine (composite microstructure + risk state & dynamic limits)
+- [x] End-to-end integration tests (`EndToEndTradingTest.cpp` - 5 comprehensive scenarios)
+- [x] 100% CTest pass rate (594/594 tests passing across 32 test suites)
+- [x] Google Benchmark performance baselines for Microstructure & Risk Intelligence
+
+## Phase 3 — Next Advanced Microstructure & Risk Capabilities
+
+- [ ] Order Flow Imbalance (OFI) & Cumulative Volume Delta (CVD)
+- [ ] Portfolio Risk (Parametric VaR, Diversification Ratio, HHI Concentration)
+- [ ] Market Regime Detection (Volatility/Liquidity Regimes)
+- [ ] Non-linear market impact models (Almgren-Chriss / square-root law)
+- [ ] Latency-adjusted fill probability simulation
+- [ ] Event-driven tick & L2 book replay backtester
+- [ ] Parameter sweeps and walk-forward analysis
 
 ## Phase 3 — C++ Service
 

@@ -25,8 +25,10 @@ out/
 coverage/
 
 # C++
+cpp-engine/build-*/
 cpp-engine/build/
 cpp-engine/build-release/
+cpp-engine/build-debug/
 
 # Frontend
 frontend/.vite/

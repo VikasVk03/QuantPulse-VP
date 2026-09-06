@@ -667,13 +667,77 @@ Trade classification methodology will be documented when implemented.
 
 Measure the price movement associated with a trade or change in market liquidity.
 
-The implementation will specify:
+---
 
-- Reference price
-- Observation horizon
-- Trade direction
-- Volume normalization
-- Temporary vs. permanent impact
+## 2.22 Stoikov Microprice
+
+#### Purpose
+
+Estimate the queue-weighted fair price by incorporating bid/ask quantities alongside top-of-book prices (Stoikov 2018).
+
+#### Formula
+
+```text
+P_micro = (bidPrice * askVolume + askPrice * bidVolume) / (bidVolume + askVolume)
+```
+
+Or equivalently:
+
+```text
+P_micro = P_mid + Spread * (bidVolume / (bidVolume + askVolume) - 0.5)
+```
+
+#### Properties
+
+- When bidVolume >> askVolume (buy pressure), P_micro shifts toward askPrice.
+- When askVolume >> bidVolume (sell pressure), P_micro shifts toward bidPrice.
+- When bidVolume == askVolume, P_micro == P_mid.
+
+---
+
+## 2.23 Multi-Level Depth Imbalance
+
+#### Purpose
+
+Quantify order book queue pressure across $N$ depth levels:
+
+#### Formula
+
+```text
+DepthImbalance_N = (sum_{i=1}^N Q_bid,i - sum_{i=1}^N Q_ask,i) / (sum_{i=1}^N Q_bid,i + sum_{i=1}^N Q_ask,i)
+```
+
+Bounded strictly in `[-1.0, 1.0]`.
+
+---
+
+## 2.24 Effective Spread and Relative Effective Spread
+
+#### Purpose
+
+Measure the actual round-trip transaction cost paid by an aggressing trade relative to the prevailing midpoint:
+
+#### Formula
+
+```text
+EffectiveSpread = 2 * |P_trade - P_mid|
+RelativeEffectiveSpread = (2 * |P_trade - P_mid|) / P_mid
+```
+
+---
+
+## 2.25 Risk Intelligence Engine
+
+#### Purpose
+
+Synthesize market microstructure conditions (relative spread, multi-level depth imbalance, microprice drift), annualized volatility, portfolio drawdown, and capital exposure into a deterministic multi-factor risk state classification and dynamic position sizing multiplier.
+
+#### Classification
+
+- `Normal`: Composite score < 25, sizing multiplier = 1.0, trading permitted.
+- `Elevated`: Composite score in [25, 50) or elevated threshold breach, sizing multiplier = 0.60, trading permitted.
+- `High`: Composite score in [50, 75) or high threshold breach, sizing multiplier = 0.25, trading permitted.
+- `Critical`: Composite score >= 75 or critical threshold breach (e.g. drawdown >= 15%), sizing multiplier = 0.0, trading rejected.
 
 ---
 

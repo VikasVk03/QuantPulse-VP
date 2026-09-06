@@ -383,7 +383,6 @@ TEST(
         std::invalid_argument);
 }
 
-
 TEST(
     MarketMicrostructureEngineTest,
     ThrowsForNaNQuotePrice)
@@ -797,6 +796,191 @@ TEST(
                 MarketMicrostructureEngine::priceImpact(
                     100.0,
                     std::numeric_limits<double>::infinity());
+
+            (void)result;
+        },
+        std::invalid_argument);
+}
+
+TEST(
+    MarketMicrostructureEngineTest,
+    CalculatesMicroprice)
+{
+    // bid 100.0 @ 10, ask 101.0 @ 30 -> heavy ask volume pushes microprice to 100.25
+    const double pMicro =
+        MarketMicrostructureEngine::microprice(
+            100.0,
+            101.0,
+            10.0,
+            30.0);
+
+    EXPECT_NEAR(pMicro, 100.25, 1e-12);
+}
+
+TEST(
+    MarketMicrostructureEngineTest,
+    CalculatesMicropriceBalancedVolume)
+{
+    // Equal volumes -> microprice equals midPrice
+    const double pMicro =
+        MarketMicrostructureEngine::microprice(
+            100.0,
+            102.0,
+            25.0,
+            25.0);
+
+    EXPECT_DOUBLE_EQ(pMicro, 101.0);
+}
+
+TEST(
+    MarketMicrostructureEngineTest,
+    MicropriceThrowsOnZeroTotalVolume)
+{
+    EXPECT_THROW(
+        {
+            const auto result =
+                MarketMicrostructureEngine::microprice(
+                    100.0,
+                    101.0,
+                    0.0,
+                    0.0);
+
+            (void)result;
+        },
+        std::invalid_argument);
+}
+
+TEST(
+    MarketMicrostructureEngineTest,
+    MicropriceThrowsOnNegativeVolume)
+{
+    EXPECT_THROW(
+        {
+            const auto result =
+                MarketMicrostructureEngine::microprice(
+                    100.0,
+                    101.0,
+                    -5.0,
+                    10.0);
+
+            (void)result;
+        },
+        std::invalid_argument);
+}
+
+TEST(
+    MarketMicrostructureEngineTest,
+    CalculatesMultiLevelDepthImbalance)
+{
+    const std::vector<double> bids{10.0, 20.0, 30.0}; // total 60
+    const std::vector<double> asks{5.0, 10.0, 15.0};  // total 30
+
+    const double imbalance =
+        MarketMicrostructureEngine::multiLevelDepthImbalance(bids, asks);
+
+    EXPECT_NEAR(imbalance, 30.0 / 90.0, 1e-12);
+}
+
+TEST(
+    MarketMicrostructureEngineTest,
+    MultiLevelDepthImbalanceSymmetricZero)
+{
+    const std::vector<double> bids{15.0, 25.0};
+    const std::vector<double> asks{15.0, 25.0};
+
+    const double imbalance =
+        MarketMicrostructureEngine::multiLevelDepthImbalance(bids, asks);
+
+    EXPECT_DOUBLE_EQ(imbalance, 0.0);
+}
+
+TEST(
+    MarketMicrostructureEngineTest,
+    MultiLevelDepthImbalanceThrowsOnMismatchedSize)
+{
+    const std::vector<double> bids{10.0, 20.0};
+    const std::vector<double> asks{10.0};
+
+    EXPECT_THROW(
+        {
+            const auto result =
+                MarketMicrostructureEngine::multiLevelDepthImbalance(bids, asks);
+
+            (void)result;
+        },
+        std::invalid_argument);
+}
+
+TEST(
+    MarketMicrostructureEngineTest,
+    MultiLevelDepthImbalanceThrowsOnEmptyInput)
+{
+    const std::vector<double> empty{};
+
+    EXPECT_THROW(
+        {
+            const auto result =
+                MarketMicrostructureEngine::multiLevelDepthImbalance(empty, empty);
+
+            (void)result;
+        },
+        std::invalid_argument);
+}
+
+TEST(
+    MarketMicrostructureEngineTest,
+    MultiLevelDepthImbalanceThrowsOnZeroTotalVolume)
+{
+    const std::vector<double> bids{0.0, 0.0};
+    const std::vector<double> asks{0.0, 0.0};
+
+    EXPECT_THROW(
+        {
+            const auto result =
+                MarketMicrostructureEngine::multiLevelDepthImbalance(bids, asks);
+
+            (void)result;
+        },
+        std::invalid_argument);
+}
+
+TEST(
+    MarketMicrostructureEngineTest,
+    CalculatesEffectiveSpread)
+{
+    const double effSpread =
+        MarketMicrostructureEngine::effectiveSpread(100.25, 100.0);
+
+    EXPECT_DOUBLE_EQ(effSpread, 0.50);
+}
+
+TEST(
+    MarketMicrostructureEngineTest,
+    CalculatesRelativeEffectiveSpread)
+{
+    const double relSpread =
+        MarketMicrostructureEngine::relativeEffectiveSpread(100.25, 100.0);
+
+    EXPECT_DOUBLE_EQ(relSpread, 0.50 / 100.0);
+}
+
+TEST(
+    MarketMicrostructureEngineTest,
+    EffectiveSpreadThrowsOnNonPositivePrices)
+{
+    EXPECT_THROW(
+        {
+            const auto result =
+                MarketMicrostructureEngine::effectiveSpread(0.0, 100.0);
+
+            (void)result;
+        },
+        std::invalid_argument);
+
+    EXPECT_THROW(
+        {
+            const auto result =
+                MarketMicrostructureEngine::effectiveSpread(100.0, -1.0);
 
             (void)result;
         },
