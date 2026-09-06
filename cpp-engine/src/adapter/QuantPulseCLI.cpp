@@ -1,15 +1,14 @@
 #include "quantpulse/application/analytics/MarketDataAnalytics.hpp"
 #include "quantpulse/infrastructure/market_data/CsvMarketDataReader.hpp"
+#include "quantpulse/infrastructure/serialization/MarketAnalyticsJson.hpp"
 
 #include <exception>
-#include <iomanip>
 #include <iostream>
 #include <string>
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3 ||
-        std::string(argv[1]) != "analyze")
+    if (argc != 3 || std::string(argv[1]) != "analyze")
     {
         std::cerr
             << "Usage: quantpulse_cli analyze <market-data.csv>\n";
@@ -17,53 +16,32 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    const std::string filePath = argv[2];
-
     try
     {
-        const auto observations =
+        const std::string filePath = argv[2];
+
+        const auto dataset =
             quantpulse::infrastructure::market_data::
                 CsvMarketDataReader::read(filePath);
 
         const auto report =
             quantpulse::application::analytics::
                 MarketDataAnalytics::analyze(
-                    "RELIANCE",
-                    observations);
+                    dataset.symbol,
+                    dataset.observations);
 
         std::cout
-            << "\n"
-            << "========================================\n"
-            << "       QUANTPULSE MARKET ANALYSIS       \n"
-            << "========================================\n"
-            << "Symbol              "
-            << report.symbol << '\n'
-            << "Observations        "
-            << report.observationCount << '\n'
-            << "First Price         "
-            << std::fixed
-            << std::setprecision(2)
-            << report.firstPrice << '\n'
-            << "Last Price          "
-            << report.lastPrice << '\n'
-            << "Return (%)          "
-            << report.returnPercentage << '\n'
-            << "Total Volume        "
-            << report.totalVolume << '\n'
-            << "Average Volume      "
-            << report.averageVolume << '\n'
-            << "Volatility          "
-            << report.volatility << '\n'
-            << "========================================\n"
+            << quantpulse::infrastructure::serialization::
+                   MarketAnalyticsJson::serialize(report)
             << '\n';
 
         return 0;
     }
-    catch (const std::exception &exception)
+    catch (const std::exception &error)
     {
         std::cerr
             << "QuantPulse error: "
-            << exception.what()
+            << error.what()
             << '\n';
 
         return 1;

@@ -52,6 +52,7 @@ add_library(
     src/domain/liquidity/LiquidityEngine.cpp
     src/infrastructure/market_data/CsvMarketDataReader.cpp
     src/application/analytics/MarketDataAnalytics.cpp
+    src/infrastructure/serialization/MarketAnalyticsJson.cpp
 )
 
 target_include_directories(
