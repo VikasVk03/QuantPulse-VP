@@ -49,6 +49,7 @@ add_library(
     src/domain/matching/MatchingEngine.cpp
     src/domain/latency/LatencyEngine.cpp
     src/domain/order_flow/OrderFlowEngine.cpp
+    src/domain/liquidity/LiquidityEngine.cpp
 )
 
 target_include_directories(
@@ -129,6 +130,7 @@ add_executable(
     tests/latency/LatencyEngineTest.cpp
     tests/integration/EndToEndTradingTest.cpp
     tests/order_flow/OrderFlowEngineTest.cpp
+    tests/liquidity/LiquidityEngineTest.cpp
 )
 
 target_link_libraries(
@@ -192,6 +194,7 @@ add_executable(
     benchmarks/matching/MatchingEngineBenchmark.cpp
     benchmarks/latency/LatencyEngineBenchmark.cpp
     benchmarks/order_flow/OrderFlowEngineBenchmark.cpp
+    benchmarks/liquidity/LiquidityEngineBenchmark.cpp
 )
 
 target_link_libraries(
