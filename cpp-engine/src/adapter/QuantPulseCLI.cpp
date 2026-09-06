@@ -1,33 +1,49 @@
-#include "quantpulse/domain/risk/RiskEngine.hpp"
+#include "quantpulse/application/analytics/MarketDataAnalytics.hpp"
+#include "quantpulse/infrastructure/market_data/CsvMarketDataReader.hpp"
+#include "quantpulse/infrastructure/serialization/MarketAnalyticsJson.hpp"
 
+#include <exception>
 #include <iostream>
-#include <vector>
+#include <string>
 
-int main()
+int main(int argc, char *argv[])
 {
-    using quantpulse::domain::risk::RiskEngine;
-
-    std::vector<double> returns;
-
-    double value;
-
-    while (std::cin >> value)
+    if (argc != 3 || std::string(argv[1]) != "analyze")
     {
-        returns.push_back(value);
-    }
+        std::cerr
+            << "Usage: quantpulse_cli analyze <market-data.csv>\n";
 
-    if (returns.empty())
-    {
-        std::cerr << "No return observations provided.\n";
         return 1;
     }
 
-    const double result =
-        RiskEngine::sharpeRatio(
-            returns,
-            0.002);
+    try
+    {
+        const std::string filePath = argv[2];
 
-    std::cout << result << '\n';
+        const auto dataset =
+            quantpulse::infrastructure::market_data::
+                CsvMarketDataReader::read(filePath);
 
-    return 0;
+        const auto report =
+            quantpulse::application::analytics::
+                MarketDataAnalytics::analyze(
+                    dataset.symbol,
+                    dataset.observations);
+
+        std::cout
+            << quantpulse::infrastructure::serialization::
+                   MarketAnalyticsJson::serialize(report)
+            << '\n';
+
+        return 0;
+    }
+    catch (const std::exception &error)
+    {
+        std::cerr
+            << "QuantPulse error: "
+            << error.what()
+            << '\n';
+
+        return 1;
+    }
 }
