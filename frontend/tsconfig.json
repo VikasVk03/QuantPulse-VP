@@ -9,6 +9,9 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@/*": ["./*"]
+    },
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,

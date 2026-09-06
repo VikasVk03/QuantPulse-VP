@@ -1,132 +1,162 @@
-import type { MarketSeriesPoint } from "../../features/market/market.types";
+import { useEffect, useRef } from "react";
+import {
+  ColorType,
+  createChart,
+  HistogramSeries,
+  LineSeries,
+  type IChartApi,
+  type Time,
+} from "lightweight-charts";
+
+import type { MarketSeriesPoint } from "@/features/market/market.types";
 
 interface PriceChartProps {
   series: MarketSeriesPoint[];
 }
 
-const WIDTH = 900;
-const HEIGHT = 360;
-
-const PADDING = {
-  top: 30,
-  right: 30,
-  bottom: 45,
-  left: 65,
-};
-
 export function PriceChart({ series }: PriceChartProps) {
-  if (series.length === 0) {
-    return <div className="chart-empty">No price observations available.</div>;
-  }
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const chartRef = useRef<IChartApi | null>(null);
 
-  const prices = series.map((point) => point.price);
-
-  const minPrice = Math.min(...prices);
-  const maxPrice = Math.max(...prices);
-
-  const priceRange = maxPrice - minPrice || 1;
-
-  const chartWidth = WIDTH - PADDING.left - PADDING.right;
-
-  const chartHeight = HEIGHT - PADDING.top - PADDING.bottom;
-
-  const getX = (index: number) => {
-    if (series.length === 1) {
-      return PADDING.left;
+  useEffect(() => {
+    if (!containerRef.current || series.length === 0) {
+      return;
     }
 
-    return PADDING.left + (index / (series.length - 1)) * chartWidth;
-  };
+    const container = containerRef.current;
 
-  const getY = (price: number) => {
-    return PADDING.top + ((maxPrice - price) / priceRange) * chartHeight;
-  };
+    const chart = createChart(container, {
+      width: container.clientWidth,
+      height: 420,
 
-  const points = series
-    .map((point, index) => `${getX(index)},${getY(point.price)}`)
-    .join(" ");
+      layout: {
+        background: {
+          type: ColorType.Solid,
+          color: "#0f1b2d",
+        },
+        textColor: "#8fa8c7",
+        attributionLogo: true,
+      },
 
-  const areaPoints = [
-    `${getX(0)},${HEIGHT - PADDING.bottom}`,
-    points,
-    `${getX(series.length - 1)},${HEIGHT - PADDING.bottom}`,
-  ].join(" ");
+      grid: {
+        vertLines: {
+          color: "#1c2d44",
+        },
+        horzLines: {
+          color: "#1c2d44",
+        },
+      },
 
-  const yTicks = 5;
+      rightPriceScale: {
+        borderColor: "#263a54",
+        scaleMargins: {
+          top: 0.08,
+          bottom: 0.25,
+        },
+      },
+
+      timeScale: {
+        borderColor: "#263a54",
+        timeVisible: true,
+        secondsVisible: false,
+        rightOffset: 2,
+        barSpacing: 12,
+      },
+
+      crosshair: {
+        vertLine: {
+          color: "#5d8fd8",
+          width: 1,
+          style: 3,
+          labelBackgroundColor: "#1d4f91",
+        },
+        horzLine: {
+          color: "#5d8fd8",
+          width: 1,
+          style: 3,
+          labelBackgroundColor: "#1d4f91",
+        },
+      },
+
+      localization: {
+        priceFormatter: (price: number) => `₹${price.toFixed(2)}`,
+      },
+    });
+
+    chartRef.current = chart;
+
+    const priceSeries = chart.addSeries(LineSeries, {
+      color: "#4c9aff",
+      lineWidth: 2,
+
+      crosshairMarkerVisible: true,
+      crosshairMarkerRadius: 4,
+
+      lastValueVisible: true,
+      priceLineVisible: true,
+
+      priceFormat: {
+        type: "price",
+        precision: 2,
+        minMove: 0.01,
+      },
+    });
+
+    const volumeSeries = chart.addSeries(HistogramSeries, {
+      priceFormat: {
+        type: "volume",
+      },
+
+      priceScaleId: "volume",
+
+      color: "rgba(76, 154, 255, 0.35)",
+
+      lastValueVisible: false,
+      priceLineVisible: false,
+    });
+
+    volumeSeries.priceScale().applyOptions({
+      scaleMargins: {
+        top: 0.78,
+        bottom: 0,
+      },
+    });
+
+    priceSeries.setData(
+      series.map((point) => ({
+        time: point.timestamp as Time,
+        value: point.price,
+      })),
+    );
+
+    volumeSeries.setData(
+      series.map((point) => ({
+        time: point.timestamp as Time,
+        value: point.volume,
+      })),
+    );
+
+    chart.timeScale().fitContent();
+
+    const resizeObserver = new ResizeObserver(() => {
+      chart.applyOptions({
+        width: container.clientWidth,
+      });
+    });
+
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+      chart.remove();
+      chartRef.current = null;
+    };
+  }, [series]);
 
   return (
-    <div className="chart-container">
-      <div className="chart-header">
-        <div>
-          <h2>Price Trend</h2>
-          <span>Close price observations</span>
-        </div>
-
-        <div className="chart-legend">
-          <span className="legend-dot" />
-          Close Price
-        </div>
-      </div>
-
-      <svg
-        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        className="price-chart"
-        role="img"
-        aria-label="Market price chart"
-      >
-        {Array.from({ length: yTicks }, (_, index) => {
-          const ratio = index / (yTicks - 1);
-
-          const price = maxPrice - ratio * priceRange;
-
-          const y = PADDING.top + ratio * chartHeight;
-
-          return (
-            <g key={index}>
-              <line
-                x1={PADDING.left}
-                x2={WIDTH - PADDING.right}
-                y1={y}
-                y2={y}
-                className="grid-line"
-              />
-
-              <text
-                x={PADDING.left - 10}
-                y={y + 4}
-                textAnchor="end"
-                className="axis-label"
-              >
-                {price.toFixed(2)}
-              </text>
-            </g>
-          );
-        })}
-
-        <polygon points={areaPoints} className="chart-area" />
-
-        <polyline points={points} fill="none" className="chart-line" />
-
-        {series.map((point, index) => (
-          <circle
-            key={`${point.timestamp}-${index}`}
-            cx={getX(index)}
-            cy={getY(point.price)}
-            r="4"
-            className="chart-point"
-          >
-            <title>{point.price.toFixed(2)}</title>
-          </circle>
-        ))}
-
-        <line
-          x1={PADDING.left}
-          x2={WIDTH - PADDING.right}
-          y1={HEIGHT - PADDING.bottom}
-          y2={HEIGHT - PADDING.bottom}
-          className="axis-line"
-        />
-      </svg>
-    </div>
+    <div
+      ref={containerRef}
+      className="h-[105] w-full overflow-hidden rounded-md border border-border/50 bg-[#0f1b2d]"
+    />
   );
 }
