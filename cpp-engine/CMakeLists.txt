@@ -22,6 +22,7 @@ add_library(
     src/domain/returns/ReturnsEngine.cpp
     src/domain/volatility/VolatilityEngine.cpp
     src/domain/risk/RiskEngine.cpp 
+    src/domain/risk/RiskIntelligenceEngine.cpp
     src/domain/portfolio/PortfolioEngine.cpp
     src/domain/microstructure/MarketMicrostructureEngine.cpp
     src/domain/features/FeatureEngine.cpp
@@ -99,6 +100,7 @@ add_executable(
     tests/returns/ReturnsEngineTest.cpp
     tests/volatility/VolatilityEngineTest.cpp
     tests/risk/RiskEngineTest.cpp
+    tests/risk/RiskIntelligenceEngineTest.cpp
     tests/portfolio/PortfolioEngineTest.cpp  
     tests/microstructure/MarketMicrostructureEngineTest.cpp
     tests/features/FeatureEngineTest.cpp
@@ -124,6 +126,7 @@ add_executable(
     tests/order_book/OrderBookEngineTest.cpp
     tests/matching/MatchingEngineTest.cpp
     tests/latency/LatencyEngineTest.cpp
+    tests/integration/EndToEndTradingTest.cpp
 )
 
 target_link_libraries(
@@ -160,6 +163,7 @@ add_executable(
     benchmarks/returns/ReturnsEngineBenchmark.cpp
     benchmarks/volatility/VolatilityEngineBenchmark.cpp
     benchmarks/risk/RiskEngineBenchmark.cpp
+    benchmarks/risk/RiskIntelligenceEngineBenchmark.cpp
     benchmarks/portfolio/PortfolioEngineBenchmark.cpp
     benchmarks/microstructure/MarketMicrostructureEngineBenchmark.cpp
     benchmarks/features/FeatureEngineBenchmarks.cpp

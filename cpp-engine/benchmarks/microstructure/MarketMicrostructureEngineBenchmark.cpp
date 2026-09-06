@@ -183,6 +183,38 @@ namespace
         }
     }
 
+    static void BM_MICROPRICE(
+        benchmark::State &state)
+    {
+        for (auto _ : state)
+        {
+            const double result =
+                MarketMicrostructureEngine::microprice(
+                    100.0,
+                    100.5,
+                    15.0,
+                    35.0);
+
+            benchmark::DoNotOptimize(result);
+        }
+    }
+
+    static void BM_MULTI_LEVEL_DEPTH_IMBALANCE(
+        benchmark::State &state)
+    {
+        const std::size_t levels = static_cast<std::size_t>(state.range(0));
+        const std::vector<double> bids(levels, 25.0);
+        const std::vector<double> asks(levels, 30.0);
+
+        for (auto _ : state)
+        {
+            const double result =
+                MarketMicrostructureEngine::multiLevelDepthImbalance(bids, asks);
+
+            benchmark::DoNotOptimize(result);
+        }
+    }
+
 } // namespace
 
 BENCHMARK(BM_VWAP)
@@ -208,3 +240,12 @@ BENCHMARK(BM_ORDER_IMBALANCE);
 BENCHMARK(BM_TRADE_IMBALANCE);
 
 BENCHMARK(BM_PRICE_IMPACT);
+
+BENCHMARK(BM_MICROPRICE);
+
+BENCHMARK(BM_MULTI_LEVEL_DEPTH_IMBALANCE)
+    ->Arg(5)
+    ->Arg(10)
+    ->Arg(25)
+    ->Arg(50)
+    ->Arg(100);

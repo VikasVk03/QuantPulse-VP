@@ -152,6 +152,83 @@ namespace quantpulse::domain::microstructure
         static double priceImpact(
             double priceBefore,
             double priceAfter);
+
+        /**
+         * @brief Calculate the Stoikov (2018) microprice.
+         *
+         * Formula:
+         *     P_micro = (bidPrice * askVolume + askPrice * bidVolume) / (bidVolume + askVolume)
+         *
+         * @param bidPrice Best bid price.
+         * @param askPrice Best ask price.
+         * @param bidVolume Volume available at the bid.
+         * @param askVolume Volume available at the ask.
+         *
+         * @return Stoikov microprice.
+         *
+         * @throw std::invalid_argument if prices/volumes are invalid or total volume is zero.
+         */
+        [[nodiscard]]
+        static double microprice(
+            double bidPrice,
+            double askPrice,
+            double bidVolume,
+            double askVolume);
+
+        /**
+         * @brief Calculate multi-level order book depth imbalance across N levels.
+         *
+         * Formula:
+         *     Imbalance = (sum(bidVolumes) - sum(askVolumes)) / (sum(bidVolumes) + sum(askVolumes))
+         *
+         * @param bidVolumes Available volumes at bid levels (index 0 is best bid).
+         * @param askVolumes Available volumes at ask levels (index 0 is best ask).
+         *
+         * @return Depth imbalance in range [-1, 1].
+         *
+         * @throw std::invalid_argument if inputs are empty, unequal length,
+         *        contain negative/non-finite values, or total volume is zero.
+         */
+        [[nodiscard]]
+        static double multiLevelDepthImbalance(
+            const std::vector<double> &bidVolumes,
+            const std::vector<double> &askVolumes);
+
+        /**
+         * @brief Calculate effective spread of an executed trade.
+         *
+         * Formula:
+         *     EffectiveSpread = 2 * abs(tradePrice - midPrice)
+         *
+         * @param tradePrice Execution price of the trade.
+         * @param midPrice Prevailing midpoint price.
+         *
+         * @return Absolute effective spread.
+         *
+         * @throw std::invalid_argument if prices are non-finite or non-positive.
+         */
+        [[nodiscard]]
+        static double effectiveSpread(
+            double tradePrice,
+            double midPrice);
+
+        /**
+         * @brief Calculate relative effective spread of an executed trade.
+         *
+         * Formula:
+         *     RelativeEffectiveSpread = (2 * abs(tradePrice - midPrice)) / midPrice
+         *
+         * @param tradePrice Execution price of the trade.
+         * @param midPrice Prevailing midpoint price.
+         *
+         * @return Relative effective spread as a decimal.
+         *
+         * @throw std::invalid_argument if prices are non-finite or non-positive.
+         */
+        [[nodiscard]]
+        static double relativeEffectiveSpread(
+            double tradePrice,
+            double midPrice);
     };
 
 } // namespace quantpulse::domain::microstructure

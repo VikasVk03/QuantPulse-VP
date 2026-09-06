@@ -237,4 +237,120 @@ namespace quantpulse::domain::microstructure
                priceBefore;
     }
 
+    double MarketMicrostructureEngine::microprice(
+        double bidPrice,
+        double askPrice,
+        double bidVolume,
+        double askVolume)
+    {
+        validateQuote(bidPrice, askPrice);
+
+        if (!std::isfinite(bidVolume) || !std::isfinite(askVolume))
+        {
+            throw std::invalid_argument(
+                "Bid and ask volumes must be finite.");
+        }
+
+        if (bidVolume < 0.0 || askVolume < 0.0)
+        {
+            throw std::invalid_argument(
+                "Bid and ask volumes cannot be negative.");
+        }
+
+        const double totalVolume = bidVolume + askVolume;
+        if (totalVolume == 0.0)
+        {
+            throw std::invalid_argument(
+                "Bid and ask volume cannot both be zero.");
+        }
+
+        return (bidPrice * askVolume + askPrice * bidVolume) / totalVolume;
+    }
+
+    double MarketMicrostructureEngine::multiLevelDepthImbalance(
+        const std::vector<double> &bidVolumes,
+        const std::vector<double> &askVolumes)
+    {
+        if (bidVolumes.empty() || askVolumes.empty())
+        {
+            throw std::invalid_argument(
+                "Depth volumes must not be empty.");
+        }
+
+        if (bidVolumes.size() != askVolumes.size())
+        {
+            throw std::invalid_argument(
+                "Bid and ask depth vectors must have equal size.");
+        }
+
+        double totalBid = 0.0;
+        for (const double vol : bidVolumes)
+        {
+            if (!std::isfinite(vol) || vol < 0.0)
+            {
+                throw std::invalid_argument(
+                    "Bid volumes must be finite and non-negative.");
+            }
+            totalBid += vol;
+        }
+
+        double totalAsk = 0.0;
+        for (const double vol : askVolumes)
+        {
+            if (!std::isfinite(vol) || vol < 0.0)
+            {
+                throw std::invalid_argument(
+                    "Ask volumes must be finite and non-negative.");
+            }
+            totalAsk += vol;
+        }
+
+        const double totalVolume = totalBid + totalAsk;
+        if (totalVolume == 0.0)
+        {
+            throw std::invalid_argument(
+                "Total depth volume across all levels cannot be zero.");
+        }
+
+        return (totalBid - totalAsk) / totalVolume;
+    }
+
+    double MarketMicrostructureEngine::effectiveSpread(
+        double tradePrice,
+        double midPrice)
+    {
+        if (!std::isfinite(tradePrice) || !std::isfinite(midPrice))
+        {
+            throw std::invalid_argument(
+                "Prices must be finite.");
+        }
+
+        if (tradePrice <= 0.0 || midPrice <= 0.0)
+        {
+            throw std::invalid_argument(
+                "Prices must be greater than zero.");
+        }
+
+        return 2.0 * std::abs(tradePrice - midPrice);
+    }
+
+    double MarketMicrostructureEngine::relativeEffectiveSpread(
+        double tradePrice,
+        double midPrice)
+    {
+        if (!std::isfinite(tradePrice) || !std::isfinite(midPrice))
+        {
+            throw std::invalid_argument(
+                "Prices must be finite.");
+        }
+
+        if (tradePrice <= 0.0 || midPrice <= 0.0)
+        {
+            throw std::invalid_argument(
+                "Prices must be greater than zero.");
+        }
+
+        return (2.0 * std::abs(tradePrice - midPrice)) / midPrice;
+    }
+
 } // namespace quantpulse::domain::microstructure
