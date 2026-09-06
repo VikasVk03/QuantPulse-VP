@@ -36,4 +36,40 @@ namespace quantpulse::domain::execution
             "Invalid strategy action.");
     }
 
+    ExecutionReport ExecutionEngine::process(
+        const matching::MatchResult &matchResult)
+    {
+        ExecutionReport report{};
+
+        report.requestedQuantity =
+            matchResult.requestedQuantity;
+
+        report.executedQuantity =
+            matchResult.filledQuantity;
+
+        report.remainingQuantity =
+            matchResult.remainingQuantity;
+
+        report.averageExecutionPrice =
+            matchResult.averageFillPrice;
+
+        if (matchResult.filledQuantity <= 0.0)
+        {
+            report.status =
+                ExecutionStatus::NoExecution;
+        }
+        else if (matchResult.remainingQuantity > 0.0)
+        {
+            report.status =
+                ExecutionStatus::PartiallyFilled;
+        }
+        else
+        {
+            report.status =
+                ExecutionStatus::Filled;
+        }
+
+        return report;
+    }
+
 } // namespace quantpulse::domain::execution

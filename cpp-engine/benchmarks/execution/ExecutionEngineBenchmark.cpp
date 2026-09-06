@@ -4,14 +4,14 @@
 
 namespace
 {
-
     using quantpulse::domain::execution::
         ExecutionEngine;
 
     using quantpulse::domain::strategy::
         StrategyAction;
 
-    static void BM_EXECUTION_ENGINE(
+    static void
+    BM_EXECUTION_ENGINE(
         benchmark::State &state)
     {
         for (auto _ : state)
@@ -42,6 +42,38 @@ namespace
             state.iterations() * 3);
     }
 
+    static void
+    BM_EXECUTION_PROCESS(
+        benchmark::State &state)
+    {
+        quantpulse::domain::matching::MatchResult
+            matchResult{};
+
+        matchResult.requestedQuantity =
+            500.0;
+
+        matchResult.filledQuantity =
+            500.0;
+
+        matchResult.remainingQuantity =
+            0.0;
+
+        matchResult.averageFillPrice =
+            101.25;
+
+        for (auto _ : state)
+        {
+            const auto result =
+                ExecutionEngine::process(
+                    matchResult);
+
+            benchmark::DoNotOptimize(
+                result);
+        }
+    }
+
 } // namespace
 
 BENCHMARK(BM_EXECUTION_ENGINE);
+
+BENCHMARK(BM_EXECUTION_PROCESS);
