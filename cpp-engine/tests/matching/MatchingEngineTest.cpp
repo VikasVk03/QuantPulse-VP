@@ -334,3 +334,177 @@ TEST(MatchingEngineTest, ResultContainsSingleTopOfBookFill)
         result.fills.front().quantity,
         20.0);
 }
+
+TEST(MatchingEngineTest, BuyConsumesMultipleAskLevels)
+{
+    OrderBookEngine book;
+
+    book.updateAsk(101.0, 10.0);
+    book.updateAsk(102.0, 20.0);
+    book.updateAsk(103.0, 30.0);
+
+    MatchingEngine engine;
+
+    const auto result =
+        engine.match(
+            book,
+            MatchRequest{
+                OrderSide::Buy,
+                25.0});
+
+    EXPECT_DOUBLE_EQ(
+        result.requestedQuantity,
+        25.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.filledQuantity,
+        25.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.remainingQuantity,
+        0.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.averageFillPrice,
+        101.6);
+
+    ASSERT_EQ(
+        result.fills.size(),
+        2U);
+
+    EXPECT_DOUBLE_EQ(
+        result.fills[0].price,
+        101.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.fills[0].quantity,
+        10.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.fills[1].price,
+        102.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.fills[1].quantity,
+        15.0);
+}
+
+TEST(MatchingEngineTest, SellConsumesMultipleBidLevels)
+{
+    OrderBookEngine book;
+
+    book.updateBid(100.0, 10.0);
+    book.updateBid(99.0, 20.0);
+    book.updateBid(98.0, 30.0);
+
+    MatchingEngine engine;
+
+    const auto result =
+        engine.match(
+            book,
+            MatchRequest{
+                OrderSide::Sell,
+                25.0});
+
+    EXPECT_DOUBLE_EQ(
+        result.requestedQuantity,
+        25.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.filledQuantity,
+        25.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.remainingQuantity,
+        0.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.averageFillPrice,
+        99.4);
+
+    ASSERT_EQ(
+        result.fills.size(),
+        2U);
+
+    EXPECT_DOUBLE_EQ(
+        result.fills[0].price,
+        100.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.fills[0].quantity,
+        10.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.fills[1].price,
+        99.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.fills[1].quantity,
+        15.0);
+}
+
+TEST(MatchingEngineTest, BuyPartiallyFillsAcrossMultipleAskLevels)
+{
+    OrderBookEngine book;
+
+    book.updateAsk(101.0, 10.0);
+    book.updateAsk(102.0, 20.0);
+
+    MatchingEngine engine;
+
+    const auto result =
+        engine.match(
+            book,
+            MatchRequest{
+                OrderSide::Buy,
+                50.0});
+
+    EXPECT_DOUBLE_EQ(
+        result.filledQuantity,
+        30.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.remainingQuantity,
+        20.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.averageFillPrice,
+        101.66666666666667);
+
+    ASSERT_EQ(
+        result.fills.size(),
+        2U);
+}
+
+TEST(MatchingEngineTest, SellPartiallyFillsAcrossMultipleBidLevels)
+{
+    OrderBookEngine book;
+
+    book.updateBid(100.0, 10.0);
+    book.updateBid(99.0, 20.0);
+
+    MatchingEngine engine;
+
+    const auto result =
+        engine.match(
+            book,
+            MatchRequest{
+                OrderSide::Sell,
+                50.0});
+
+    EXPECT_DOUBLE_EQ(
+        result.filledQuantity,
+        30.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.remainingQuantity,
+        20.0);
+
+    EXPECT_DOUBLE_EQ(
+        result.averageFillPrice,
+        99.33333333333333);
+
+    ASSERT_EQ(
+        result.fills.size(),
+        2U);
+}

@@ -24,50 +24,56 @@ namespace quantpulse::domain::matching
             double requestedQuantity)
         {
             MatchResult result{};
+
             result.requestedQuantity =
                 requestedQuantity;
+
             result.remainingQuantity =
                 requestedQuantity;
 
-            /*
-             * OrderBookEngine intentionally exposes best-price
-             * information but not its complete level arrays.
-             *
-             * Therefore this first matching implementation uses
-             * the public depth interface only for determining
-             * available top-level liquidity.
-             *
-             * A complete multi-level matching implementation will
-             * require an explicit read-only level-access API.
-             */
+            double weightedPrice = 0.0;
 
-            const double bestAsk =
-                book.bestAsk();
+            const std::size_t levelCount =
+                book.askLevelCount();
 
-            const double availableQuantity =
-                book.askDepth(1);
-
-            const double fillQuantity =
-                std::min(
-                    requestedQuantity,
-                    availableQuantity);
-
-            if (fillQuantity > 0.0)
+            for (std::size_t levelIndex = 0;
+                 levelIndex < levelCount &&
+                 result.remainingQuantity > 0.0;
+                 ++levelIndex)
             {
+                const auto level =
+                    book.askLevel(levelIndex);
+
+                const double fillQuantity =
+                    std::min(
+                        result.remainingQuantity,
+                        level.quantity);
+
+                if (fillQuantity <= 0.0)
+                {
+                    continue;
+                }
+
                 result.fills.push_back(
                     Fill{
-                        bestAsk,
+                        level.price,
                         fillQuantity});
 
-                result.filledQuantity =
+                result.filledQuantity +=
                     fillQuantity;
 
-                result.remainingQuantity =
-                    requestedQuantity -
+                result.remainingQuantity -=
                     fillQuantity;
 
+                weightedPrice +=
+                    level.price * fillQuantity;
+            }
+
+            if (result.filledQuantity > 0.0)
+            {
                 result.averageFillPrice =
-                    bestAsk;
+                    weightedPrice /
+                    result.filledQuantity;
             }
 
             return result;
@@ -78,38 +84,56 @@ namespace quantpulse::domain::matching
             double requestedQuantity)
         {
             MatchResult result{};
+
             result.requestedQuantity =
                 requestedQuantity;
+
             result.remainingQuantity =
                 requestedQuantity;
 
-            const double bestBid =
-                book.bestBid();
+            double weightedPrice = 0.0;
 
-            const double availableQuantity =
-                book.bidDepth(1);
+            const std::size_t levelCount =
+                book.bidLevelCount();
 
-            const double fillQuantity =
-                std::min(
-                    requestedQuantity,
-                    availableQuantity);
-
-            if (fillQuantity > 0.0)
+            for (std::size_t levelIndex = 0;
+                 levelIndex < levelCount &&
+                 result.remainingQuantity > 0.0;
+                 ++levelIndex)
             {
+                const auto level =
+                    book.bidLevel(levelIndex);
+
+                const double fillQuantity =
+                    std::min(
+                        result.remainingQuantity,
+                        level.quantity);
+
+                if (fillQuantity <= 0.0)
+                {
+                    continue;
+                }
+
                 result.fills.push_back(
                     Fill{
-                        bestBid,
+                        level.price,
                         fillQuantity});
 
-                result.filledQuantity =
+                result.filledQuantity +=
                     fillQuantity;
 
-                result.remainingQuantity =
-                    requestedQuantity -
+                result.remainingQuantity -=
                     fillQuantity;
 
+                weightedPrice +=
+                    level.price * fillQuantity;
+            }
+
+            if (result.filledQuantity > 0.0)
+            {
                 result.averageFillPrice =
-                    bestBid;
+                    weightedPrice /
+                    result.filledQuantity;
             }
 
             return result;
@@ -124,9 +148,21 @@ namespace quantpulse::domain::matching
 
         if (request.side == OrderSide::Buy)
         {
+            if (book.askLevelCount() == 0)
+            {
+                throw std::out_of_range(
+                    "Order book has no ask levels.");
+            }
+
             return matchBuy(
                 book,
                 request.quantity);
+        }
+
+        if (book.bidLevelCount() == 0)
+        {
+            throw std::out_of_range(
+                "Order book has no bid levels.");
         }
 
         return matchSell(
