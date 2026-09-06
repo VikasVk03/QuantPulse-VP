@@ -45,6 +45,7 @@ add_library(
     src/domain/time_series/TimeSeriesEngine.cpp
     src/domain/rolling_window/RollingWindowEngine.cpp
     src/domain/order_book/OrderBookEngine.cpp
+    src/domain/matching/MatchingEngine.cpp
 )
 
 target_include_directories(
@@ -120,6 +121,7 @@ add_executable(
     tests/time_series/TimeSeriesEngineTest.cpp
     tests/rolling_window/RollingWindowEngineTest.cpp
     tests/order_book/OrderBookEngineTest.cpp
+    tests/matching/MatchingEngineTest.cpp
 )
 
 target_link_libraries(
@@ -179,6 +181,7 @@ add_executable(
     benchmarks/time_series/TimeSeriesEngineBenchmark.cpp
     benchmarks/rolling_window/RollingWindowEngineBenchmark.cpp
     benchmarks/order_book/OrderBookEngineBenchmark.cpp
+    benchmarks/matching/MatchingEngineBenchmark.cpp
 )
 
 target_link_libraries(
