@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.20)
 project(
     QuantPulseEngine
     VERSION 0.1.0
-    LANGUAGES CXX 
+    LANGUAGES CXX
 )
 
 set(CMAKE_CXX_STANDARD 20)
@@ -17,23 +17,23 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(FetchContent)
 
 add_library(
-    quantpulse_core 
+    quantpulse_core
     src/domain/statistics/StatisticsEngine.cpp
     src/domain/returns/ReturnsEngine.cpp
     src/domain/volatility/VolatilityEngine.cpp
-    src/domain/risk/RiskEngine.cpp 
+    src/domain/risk/RiskEngine.cpp
     src/domain/risk/RiskIntelligenceEngine.cpp
     src/domain/portfolio/PortfolioEngine.cpp
     src/domain/microstructure/MarketMicrostructureEngine.cpp
     src/domain/features/FeatureEngine.cpp
     src/domain/signals/SignalEngine.cpp
-    src/domain/strategy/StrategyEngine.cpp 
+    src/domain/strategy/StrategyEngine.cpp
     src/domain/execution/ExecutionEngine.cpp
     src/domain/sizing/PositionSizingEngine.cpp
     src/domain/risk_management/RiskManagementEngine.cpp
     src/domain/trading/TradingEngine.cpp
     src/domain/backtest/BacktestEngine.cpp
-    src/domain/performance/PerformanceEngine.cpp 
+    src/domain/performance/PerformanceEngine.cpp
     src/domain/research/ResearchEngine.cpp
     src/domain/portfolio_state/PortfolioStateEngine.cpp
     src/domain/orders/OrderManagementEngine.cpp
@@ -61,22 +61,31 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_compile_options(
-    quantpulse_core
-    PRIVATE
-        -Wall
-        -Wextra 
-        -Wpedantic
-)
+if(MSVC)
+    target_compile_options(
+        quantpulse_core
+        PRIVATE
+            /W4
+            /FS
+    )
+else()
+    target_compile_options(
+        quantpulse_core
+        PRIVATE
+            -Wall
+            -Wextra
+            -Wpedantic
+    )
+endif()
 
 add_executable(
     quantpulse_demo
-    src/main.cpp 
+    src/main.cpp
 )
 
 target_link_libraries(
     quantpulse_demo
-    PRIVATE 
+    PRIVATE
         quantpulse_core
 )
 
@@ -106,7 +115,7 @@ add_executable(
     tests/volatility/VolatilityEngineTest.cpp
     tests/risk/RiskEngineTest.cpp
     tests/risk/RiskIntelligenceEngineTest.cpp
-    tests/portfolio/PortfolioEngineTest.cpp  
+    tests/portfolio/PortfolioEngineTest.cpp
     tests/microstructure/MarketMicrostructureEngineTest.cpp
     tests/features/FeatureEngineTest.cpp
     tests/signals/SignalEngineTest.cpp
@@ -135,6 +144,8 @@ add_executable(
     tests/order_flow/OrderFlowEngineTest.cpp
     tests/liquidity/LiquidityEngineTest.cpp
     tests/application/MarketDataAnalyticsTest.cpp
+    tests/infrastructure/CsvMarketDataReaderTest.cpp
+    tests/infrastructure/MarketAnalyticsJsonTest.cpp
 )
 
 target_link_libraries(
@@ -143,6 +154,14 @@ target_link_libraries(
         quantpulse_core
         GTest::gtest_main
 )
+
+if(MSVC)
+    target_compile_options(
+        quantpulse_tests
+        PRIVATE
+            /FS
+    )
+endif()
 
 include(GoogleTest)
 
@@ -203,7 +222,7 @@ add_executable(
 
 target_link_libraries(
     quantpulse_benchmarks
-    PRIVATE 
+    PRIVATE
         quantpulse_core
-        benchmark::benchmark   
+        benchmark::benchmark
 )
