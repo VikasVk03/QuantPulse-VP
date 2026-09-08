@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
             quantpulse::application::analytics::
                 MarketDataAnalytics::analyze(
                     dataset.symbol,
-                    dataset.observations);
+                    dataset.bars);
 
         std::cout
             << quantpulse::infrastructure::serialization::

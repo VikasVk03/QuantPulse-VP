@@ -13,8 +13,8 @@ namespace quantpulse::application::analytics
     MarketAnalyticsReport MarketDataAnalytics::analyze(
         const std::string &symbol,
         const std::vector<
-            quantpulse::domain::market_data::MarketObservation> &
-            observations)
+            quantpulse::domain::market_data::MarketBar> &
+            bars)
     {
         if (symbol.empty())
         {
@@ -22,30 +22,33 @@ namespace quantpulse::application::analytics
                 "Symbol cannot be empty");
         }
 
-        if (observations.empty())
+        if (bars.empty())
         {
             throw std::invalid_argument(
                 "Cannot analyze empty market data");
         }
 
         std::vector<double> prices;
-        prices.reserve(observations.size());
+        prices.reserve(bars.size());
 
         double totalVolume = 0.0;
 
         std::vector<MarketSeriesPoint> series;
-        series.reserve(observations.size());
+        series.reserve(bars.size());
 
-        for (const auto &observation : observations)
+        for (const auto &bar : bars)
         {
-            prices.push_back(observation.price);
-            totalVolume += observation.volume;
+            prices.push_back(bar.close);
+            totalVolume += bar.volume;
 
             series.push_back(
                 MarketSeriesPoint{
-                    .timestamp = observation.timestamp,
-                    .price = observation.price,
-                    .volume = observation.volume});
+                    .timestamp = bar.timestamp,
+                    .open = bar.open,
+                    .high = bar.high,
+                    .low = bar.low,
+                    .close = bar.close,
+                    .volume = bar.volume});
         }
 
         const double firstPrice = prices.front();
@@ -74,13 +77,13 @@ namespace quantpulse::application::analytics
 
         return MarketAnalyticsReport{
             .symbol = symbol,
-            .observationCount = observations.size(),
+            .observationCount = bars.size(),
             .firstPrice = firstPrice,
             .lastPrice = lastPrice,
             .totalVolume = totalVolume,
             .averageVolume =
                 totalVolume /
-                static_cast<double>(observations.size()),
+                static_cast<double>(bars.size()),
             .returnPercentage = returnPercentage,
             .volatility = volatility,
             .series = std::move(series)};

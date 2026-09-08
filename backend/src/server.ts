@@ -1,11 +1,8 @@
-import "dotenv/config";
-
 import app from "./app.js";
+import { config } from "./config/env.js";
 
-const PORT = Number(process.env.PORT) || 8000;
-
-app.listen(PORT, () => {
+app.listen(config.port, () => {
     console.log(
-        `QuantPulse backend running on port ${PORT}`
+        `QuantPulse backend running on port ${config.port}`
     );
 });

@@ -11,28 +11,33 @@ namespace quantpulse::application::analytics
     TEST(MarketDataAnalyticsTest, CalculatesBasicMarketMetrics)
     {
         const std::vector<
-            quantpulse::domain::market_data::MarketObservation>
-            observations{
+            quantpulse::domain::market_data::MarketBar>
+            bars{
                 {.timestamp = 1,
-                 .price = 100.0,
-                 .bid = 0.0,
-                 .ask = 0.0,
+                 .symbol = "TEST",
+                 .open = 99.0,
+                 .high = 101.0,
+                 .low = 98.0,
+                 .close = 100.0,
                  .volume = 1000.0},
                 {.timestamp = 2,
-                 .price = 110.0,
-                 .bid = 0.0,
-                 .ask = 0.0,
+                 .symbol = "TEST",
+                 .open = 100.0,
+                 .high = 111.0,
+                 .low = 99.0,
+                 .close = 110.0,
                  .volume = 2000.0},
                 {.timestamp = 3,
-                 .price = 105.0,
-                 .bid = 0.0,
-                 .ask = 0.0,
+                 .symbol = "TEST",
+                 .open = 109.0,
+                 .high = 112.0,
+                 .low = 104.0,
+                 .close = 105.0,
                  .volume = 3000.0}};
 
         const auto report =
             MarketDataAnalytics::analyze(
-                "TEST",
-                observations);
+                "TEST", bars);
 
         EXPECT_EQ(report.symbol, "TEST");
         EXPECT_EQ(report.observationCount, 3);
@@ -46,21 +51,30 @@ namespace quantpulse::application::analytics
         EXPECT_DOUBLE_EQ(report.returnPercentage, 5.0);
 
         EXPECT_GT(report.volatility, 0.0);
+
+        EXPECT_EQ(report.series.size(), 3);
+        EXPECT_DOUBLE_EQ(report.series[0].open, 99.0);
+        EXPECT_DOUBLE_EQ(report.series[0].high, 101.0);
+        EXPECT_DOUBLE_EQ(report.series[0].low, 98.0);
+        EXPECT_DOUBLE_EQ(report.series[0].close, 100.0);
+        EXPECT_DOUBLE_EQ(report.series[0].volume, 1000.0);
     }
 
     TEST(MarketDataAnalyticsTest, RejectsEmptySymbol)
     {
         const std::vector<
-            quantpulse::domain::market_data::MarketObservation>
-            observations{
+            quantpulse::domain::market_data::MarketBar>
+            bars{
                 {.timestamp = 1,
-                 .price = 100.0,
-                 .bid = 0.0,
-                 .ask = 0.0,
+                 .symbol = "TEST",
+                 .open = 100.0,
+                 .high = 100.0,
+                 .low = 100.0,
+                 .close = 100.0,
                  .volume = 100.0}};
 
         EXPECT_THROW(
-            MarketDataAnalytics::analyze("", observations),
+            MarketDataAnalytics::analyze("", bars),
             std::invalid_argument);
     }
 
