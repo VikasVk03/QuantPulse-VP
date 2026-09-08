@@ -1,5 +1,6 @@
 #include "quantpulse/infrastructure/market_data/CsvMarketDataReader.hpp"
 
+#include <cmath>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -27,6 +28,15 @@ namespace quantpulse::infrastructure::market_data
             }
 
             return fields;
+        }
+
+        void removeCarriageReturn(
+            std::string &value)
+        {
+            if (!value.empty() && value.back() == '\r')
+            {
+                value.pop_back();
+            }
         }
 
         std::int64_t parseTimestamp(
@@ -68,7 +78,8 @@ namespace quantpulse::infrastructure::market_data
                 const double result =
                     std::stod(value, &processed);
 
-                if (processed != value.size())
+                if (processed != value.size() ||
+                    !std::isfinite(result))
                 {
                     throw std::invalid_argument(
                         "trailing characters");
@@ -108,7 +119,12 @@ namespace quantpulse::infrastructure::market_data
                 "Market data CSV is empty");
         }
 
-        const auto header = splitCsvLine(line);
+        auto header = splitCsvLine(line);
+
+        for (auto &field : header)
+        {
+            removeCarriageReturn(field);
+        }
 
         if (header.size() != 7 ||
             header[0] != "timestamp" ||
@@ -124,12 +140,13 @@ namespace quantpulse::infrastructure::market_data
         }
 
         std::vector<
-            quantpulse::domain::market_data::MarketObservation>
-            observations;
+            quantpulse::domain::market_data::MarketBar>
+            bars;
 
         std::string datasetSymbol;
 
-        quantpulse::domain::market_data::MarketDataEngine validator;
+        std::int64_t previousTimestamp = 0;
+        bool hasPreviousTimestamp = false;
 
         std::size_t lineNumber = 1;
 
@@ -137,12 +154,19 @@ namespace quantpulse::infrastructure::market_data
         {
             ++lineNumber;
 
-            if (line.empty())
+            if (line.empty() || line == "\r")
             {
-                continue;
+                throw std::invalid_argument(
+                    "Empty market data row at CSV line " +
+                    std::to_string(lineNumber));
             }
 
-            const auto fields = splitCsvLine(line);
+            auto fields = splitCsvLine(line);
+
+            for (auto &field : fields)
+            {
+                removeCarriageReturn(field);
+            }
 
             if (fields.size() != 7)
             {
@@ -234,19 +258,30 @@ namespace quantpulse::infrastructure::market_data
                     std::to_string(lineNumber));
             }
 
-            quantpulse::domain::market_data::MarketObservation observation{
+            if (hasPreviousTimestamp &&
+                timestamp <= previousTimestamp)
+            {
+                throw std::invalid_argument(
+                    "Market data timestamps must be strictly increasing "
+                    "at CSV line " +
+                    std::to_string(lineNumber));
+            }
+
+            quantpulse::domain::market_data::MarketBar bar{
                 .timestamp = timestamp,
-                .price = close,
-                .bid = 0.0,
-                .ask = 0.0,
+                .symbol = symbol,
+                .open = open,
+                .high = high,
+                .low = low,
+                .close = close,
                 .volume = volume};
 
-            validator.update(observation);
-
-            observations.push_back(observation);
+            bars.push_back(std::move(bar));
+            previousTimestamp = timestamp;
+            hasPreviousTimestamp = true;
         }
 
-        if (observations.empty())
+        if (bars.empty())
         {
             throw std::invalid_argument(
                 "Market data CSV contains no observations");
@@ -254,7 +289,7 @@ namespace quantpulse::infrastructure::market_data
 
         return MarketDataset{
             .symbol = datasetSymbol,
-            .observations = std::move(observations)};
+            .bars = std::move(bars)};
     }
 
 } // namespace quantpulse::infrastructure::market_data

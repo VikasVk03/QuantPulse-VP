@@ -1,6 +1,6 @@
 #pragma once
 
-#include "quantpulse/domain/market_data/MarketDataEngine.hpp"
+#include "quantpulse/domain/market_data/MarketBar.hpp"
 
 #include <string>
 #include <vector>
@@ -13,8 +13,8 @@ namespace quantpulse::infrastructure::market_data
         std::string symbol;
 
         std::vector<
-            quantpulse::domain::market_data::MarketObservation>
-            observations;
+            quantpulse::domain::market_data::MarketBar>
+            bars;
     };
 
     class CsvMarketDataReader
