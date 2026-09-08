@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QuantPulse — Market Microstructure &amp; Risk Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+  :root{
+    --void:#050810;
+    --panel:#0B1220;
+    --panel-2:#0E1A2E;
+    --line:rgba(255,255,255,0.09);
+    --line-soft:rgba(255,255,255,0.05);
+    --ink:#EAF0FB;
+    --ink-dim:rgba(234,240,251,0.62);
+    --ink-faint:rgba(234,240,251,0.38);
+    --signal:#4FE3D6;      /* incoming market data */
+    --emit:#FFB454;        /* outgoing / risk signal */
+    --bid:#33D17A;
+    --ask:#FF5D6C;
+    --glass: rgba(11,18,32,0.6);
+  }
+  *{box-sizing:border-box;}
+  html{ scroll-behavior:auto; }
+  html,body{
+    margin:0; padding:0; background:var(--void); color:var(--ink);
+    font-family:'Space Grotesk', Arial, sans-serif;
+    overflow-x:hidden;
+  }
+  .mono{ font-family:'JetBrains Mono', 'SF Mono', monospace; }
+  ::selection{ background:rgba(79,227,214,0.28); }
+
+  /* ---------------- NAV ---------------- */
+  nav{
+    position:fixed; top:0; left:0; right:0; z-index:80;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px 44px;
+    border-bottom:1px solid transparent;
+    transition:background .4s ease, border-color .4s ease, backdrop-filter .4s ease;
+  }
+  nav.scrolled{ background:rgba(5,8,16,0.72); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-bottom:1px solid var(--line); }
+  .brand{ display:flex; align-items:center; gap:11px; font-weight:600; font-size:15px; }
+  .brand .mark{ width:9px; height:9px; border-radius:2px; background:var(--signal); box-shadow:0 0 12px rgba(79,227,214,0.85); transform:rotate(45deg); }
+  .brand .name{ letter-spacing:0.01em; }
+  .brand .tag{ display:block; font-family:'JetBrains Mono',monospace; font-weight:400; font-size:9px; letter-spacing:0.1em; color:var(--ink-faint); margin-top:2px; }
+  .navlinks{ display:flex; gap:34px; font-size:13.5px; color:var(--ink-dim); }
+  .navlinks a{ color:inherit; text-decoration:none; }
+  .navlinks a:hover{ color:var(--ink); }
+  .navcta{ display:flex; gap:12px; align-items:center; }
+  .btn-ghost{ color:var(--ink); font-size:13px; background:none; border:1px solid var(--line); padding:9px 16px; border-radius:7px; cursor:pointer; font-family:inherit; }
+  .btn-primary{
+    color:#04140F; font-size:13px; font-weight:600; background:var(--signal); border:none;
+    padding:10px 18px; border-radius:7px; cursor:pointer; font-family:inherit;
+    box-shadow:0 0 0 1px rgba(79,227,214,0.4), 0 8px 24px rgba(79,227,214,0.18);
+  }
+  @media (max-width:900px){ .navlinks{ display:none; } }
+
+  /* ---------------- SCENE (hero + scrollytelling, sticky 3D column) ---------------- */
+  .scene-wrap{ position:relative; display:grid; grid-template-columns:1.02fr 0.98fr; background:
+      radial-gradient(1000px 640px at 22% 20%, rgba(79,227,214,0.05), transparent 60%),
+      var(--void); }
+
+  .scene-left{ position:relative; z-index:6; }
+  .beat{ min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:0 4vw 0 6vw; }
+  .beat + .beat{ border-top:1px solid var(--line-soft); }
+
+  .kicker{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.04em;
+    color:var(--signal); margin-bottom:20px; opacity:0;
+  }
+  .kicker .dot{ width:6px; height:6px; border-radius:50%; background:var(--signal); box-shadow:0 0 8px var(--signal); animation:blink 1.6s ease-in-out infinite; }
+  @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+
+  h1{ font-size:clamp(34px,4vw,52px); line-height:1.08; font-weight:700; margin:0 0 20px; max-width:11.5ch; letter-spacing:-0.01em; opacity:0; }
+  h2{ font-size:clamp(28px,3vw,38px); line-height:1.12; font-weight:700; margin:0 0 18px; max-width:12ch; opacity:0; }
+  .lede{ font-size:16.5px; line-height:1.68; color:var(--ink-dim); max-width:46ch; margin:0 0 30px; opacity:0; }
+
+  .cta-row{ display:flex; gap:12px; margin-bottom:38px; flex-wrap:wrap; opacity:0; }
+  .cta-primary{
+    background:var(--signal); color:#04140F; border:none; font-weight:600; font-size:14px; font-family:inherit;
+    padding:13px 20px; border-radius:8px; cursor:pointer;
+    box-shadow:0 10px 26px rgba(79,227,214,0.22);
+  }
+  .cta-secondary{
+    background:transparent; border:1px solid var(--line); color:var(--ink); font-weight:500; font-size:14px; font-family:inherit;
+    padding:13px 20px; border-radius:8px; cursor:pointer;
+  }
+
+  .readouts{ display:flex; gap:34px; flex-wrap:wrap; opacity:0; }
+  .readouts div{ font-size:11.5px; color:var(--ink-faint); }
+  .readouts strong{ display:block; font-family:'JetBrains Mono',monospace; font-size:19px; color:var(--ink); font-weight:600; margin-bottom:3px; }
+
+  .legend{ display:flex; gap:22px; margin-bottom:6px; opacity:0; flex-wrap:wrap;}
+  .legend span{ display:flex; align-items:center; gap:7px; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink-faint); }
+  .legend i{ width:9px; height:9px; border-radius:2px; display:inline-block; }
+
+  /* ---- right sticky 3D stage ---- */
+  .scene-right{ position:sticky; top:0; height:100vh; overflow:hidden; z-index:2; }
+  .stage3d{ position:relative; width:100%; height:100%; perspective:1500px; perspective-origin:55% 45%; }
+
+  .grid-floor{
+    position:absolute; inset:0;
+    background-image:linear-gradient(rgba(255,255,255,0.032) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.032) 1px, transparent 1px);
+    background-size:56px 56px;
+    mask-image:radial-gradient(ellipse 70% 55% at 50% 50%, black 30%, transparent 78%);
+  }
+
+  #rig{ position:absolute; top:50%; left:50%; width:0; height:0; transform-style:preserve-3d; }
+
+  /* core node (phase A) */
+  .core-node{ position:absolute; top:0; left:0; transform:translate3d(-50%,-50%,0); width:132px; height:132px; border-radius:50%; transform-style:preserve-3d; }
+  .core-node .ball{
+    position:absolute; inset:0; border-radius:50%;
+    background:radial-gradient(circle at 34% 28%, #BFFBF3, var(--signal) 45%, #0d5c53 100%);
+    box-shadow:0 0 70px rgba(79,227,214,0.55), inset 0 0 26px rgba(255,255,255,0.25);
+  }
+  .orbit{
+    position:absolute; top:50%; left:50%; border:1px solid rgba(79,227,214,0.35); border-radius:50%;
+    transform-style:preserve-3d;
+  }
+  .orbit.o1{ width:280px; height:280px; margin:-140px 0 0 -140px; transform:rotateX(78deg); animation:spin 14s linear infinite; }
+  .orbit.o2{ width:400px; height:400px; margin:-200px 0 0 -200px; transform:rotateX(78deg) rotateZ(40deg); border-color:rgba(255,180,84,0.22); animation:spin 22s linear infinite reverse; }
+  @keyframes spin{ from{ transform:rotateX(78deg) rotateZ(0deg); } to{ transform:rotateX(78deg) rotateZ(360deg); } }
+  .orbit.o2{ animation-name:spin2; }
+  @keyframes spin2{ from{ transform:rotateX(78deg) rotateZ(40deg); } to{ transform:rotateX(78deg) rotateZ(400deg); } }
+
+  /* order-book lattice (phase B) */
+  .book-lattice{ position:absolute; top:0; left:0; transform-style:preserve-3d; opacity:0; }
+  .ob-level{ position:absolute; top:0; left:0; height:15px; transform-style:preserve-3d; }
+  .ob-bid,.ob-ask{ position:absolute; top:0; height:100%; border-radius:2px; }
+  .ob-bid{ right:2px; background:linear-gradient(90deg, rgba(51,209,122,0.15), var(--bid)); box-shadow:0 0 14px rgba(51,209,122,0.35); }
+  .ob-ask{ left:2px; background:linear-gradient(270deg, rgba(255,93,108,0.15), var(--ask)); box-shadow:0 0 14px rgba(255,93,108,0.35); }
+  .ob-mid{ position:absolute; left:50%; top:-6px; width:1px; height:calc(100% + 12px); background:rgba(255,255,255,0.18); }
+
+  /* risk radar (phase C) */
+  .risk-radar{ position:absolute; top:0; left:0; width:420px; height:420px; margin:-210px 0 0 -210px; transform-style:preserve-3d; opacity:0; }
+  .radar-disc{
+    position:absolute; inset:0; border-radius:50%;
+    background:
+      repeating-conic-gradient(from 0deg, rgba(255,180,84,0.10) 0deg 2deg, transparent 2deg 30deg),
+      radial-gradient(circle, rgba(255,180,84,0.10), transparent 70%);
+    border:1px solid rgba(255,180,84,0.3);
+    transform:rotateX(66deg);
+  }
+  .radar-ring{ position:absolute; border:1px solid rgba(255,180,84,0.22); border-radius:50%; transform:rotateX(66deg); }
+  .radar-sweep{
+    position:absolute; inset:0; border-radius:50%; transform:rotateX(66deg);
+    background:conic-gradient(from 0deg, rgba(255,180,84,0.55), transparent 26%);
+    animation:sweep 3.4s linear infinite;
+  }
+  @keyframes sweep{ to{ transform:rotateX(66deg) rotateZ(360deg); } }
+  .blip{ position:absolute; width:7px; height:7px; border-radius:50%; background:var(--emit); box-shadow:0 0 10px var(--emit); transform:rotateX(66deg); }
+
+  /* HUD glass panels (billboarded, screen-fixed within stage) */
+  .hud{
+    position:absolute; z-index:9; background:var(--glass); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--line); border-radius:11px; padding:12px 15px;
+    box-shadow:0 14px 40px rgba(0,0,0,0.35);
+    opacity:0;
+  }
+  .hud-id{ top:9%; left:7%; }
+  .hud-id .exch{ font-weight:700; font-size:14px; }
+  .hud-id .city{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--ink-faint); margin-top:2px; display:flex; align-items:center; gap:6px; }
+  .hud-id .city .live{ width:6px; height:6px; border-radius:50%; background:var(--signal); box-shadow:0 0 6px var(--signal); animation:blink 1.4s ease-in-out infinite; }
+
+  .hud-status{ bottom:10%; left:7%; width:212px; }
+  .hud-status .label{ font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.06em; color:var(--ink-faint); text-transform:uppercase; margin-bottom:7px; }
+  .hud-status .value{ font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:600; color:var(--signal); }
+  .hud-status .caption{ font-size:10.5px; color:var(--ink-faint); margin-top:4px; }
+
+  .stream-canvas{ position:absolute; inset:0; z-index:4; pointer-events:none; }
+
+  .scroll-cue{ display:flex; align-items:center; gap:10px; font-size:11.5px; color:var(--ink-faint); margin-top:6px; opacity:0; }
+  .scroll-cue .line{ width:1px; height:30px; background:linear-gradient(180deg, rgba(255,255,255,0.55), transparent); animation:draw 2s ease-in-out infinite; }
+  @keyframes draw{ 0%{ transform:scaleY(0); transform-origin:top; } 50%{ transform:scaleY(1); transform-origin:top; } 51%{ transform-origin:bottom; } 100%{ transform:scaleY(0); transform-origin:bottom; } }
+
+  @media (max-width:980px){
+    .scene-wrap{ grid-template-columns:1fr; }
+    .scene-right{ position:relative; height:64vh; order:-1; top:auto; }
+    .beat{ min-height:auto; padding:64px 6vw; }
+  }
+
+  /* ---------------- CLOSING SECTION ---------------- */
+  .closing{
+    background:linear-gradient(180deg, var(--void), #08101C);
+    padding:120px 6vw 60px; text-align:center; border-top:1px solid var(--line-soft);
+  }
+  .closing h3{ font-size:clamp(26px,3.4vw,40px); max-width:16ch; margin:0 auto 20px; line-height:1.15; }
+  .closing p{ color:var(--ink-dim); max-width:52ch; margin:0 auto 34px; font-size:15.5px; line-height:1.65; }
+  .footer-note{ text-align:center; padding:26px; font-size:11.5px; color:var(--ink-faint); font-family:'JetBrains Mono',monospace; }
+</style>
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="brand">
+    <div class="mark"></div>
+    <div>
+      <div class="name">QuantPulse</div>
+      <span class="tag">MICROSTRUCTURE &amp; RISK</span>
+    </div>
+  </div>
+  <div class="navlinks">
+    <a href="#">Order Flow</a>
+    <a href="#">Risk Engine</a>
+    <a href="#">Backtesting</a>
+    <a href="#">Research</a>
+  </div>
+  <div class="navcta">
+    <button class="btn-ghost">Sign in</button>
+    <button class="btn-primary">Open terminal</button>
+  </div>
+</nav>
+
+<div class="scene-wrap" id="scene">
+  <div class="scene-left">
+
+    <div class="beat" id="beat-hero">
+      <div class="kicker" id="k1"><span class="dot"></span>LIVE · NSE ORDER FLOW</div>
+      <h1 id="h1">Watch the order book before the tape does.</h1>
+      <p class="lede" id="l1">QuantPulse decodes market microstructure in real time — every quote, cancellation and print — and turns it into risk signals your desk can act on before the print settles.</p>
+      <div class="cta-row" id="c1">
+        <button class="cta-primary">Open the terminal →</button>
+        <button class="cta-secondary">See how it reads the book</button>
+      </div>
+      <div class="readouts" id="r1">
+        <div><strong>38µs</strong>tick-to-signal latency</div>
+        <div><strong>12 venues</strong>normalized order flow</div>
+        <div><strong>1 book</strong>unified risk view</div>
+      </div>
+      <div class="scroll-cue" id="sc1"><div class="line"></div><span>Scroll to move through the book</span></div>
+    </div>
+
+    <div class="beat" id="beat-book">
+      <div class="kicker" id="k2"><span class="dot"></span>DEPTH-OF-BOOK</div>
+      <h2 id="h2">Every price level, decomposed.</h2>
+      <p class="lede" id="l2">Raw feeds rarely agree on what "the book" looks like. QuantPulse reconstructs full depth across venues into one queue-aware ladder — so order-flow imbalance and queue position are visible the instant they form, not after the fill.</p>
+      <div class="legend" id="lg2">
+        <span><i style="background:var(--bid)"></i>Bid depth</span>
+        <span><i style="background:var(--ask)"></i>Ask depth</span>
+      </div>
+    </div>
+
+    <div class="beat" id="beat-risk">
+      <div class="kicker" id="k3"><span class="dot"></span>RISK INTELLIGENCE</div>
+      <h2 id="h3">Risk that moves at market speed.</h2>
+      <p class="lede" id="l3">Exposure, concentration and liquidity-adjusted VaR are recomputed on every tick, not once an hour. When a position drifts outside its band, the signal reaches the desk before the position does.</p>
+      <div class="legend" id="lg3">
+        <span><i style="background:var(--emit)"></i>Active risk flag</span>
+        <span><i style="border:1px solid var(--emit); background:transparent"></i>Exposure band</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="scene-right">
+    <div class="stage3d">
+      <div class="grid-floor"></div>
+      <canvas class="stream-canvas" id="stream"></canvas>
+
+      <div id="rig">
+        <div class="core-node" id="coreNode">
+          <div class="ball"></div>
+        </div>
+        <div class="orbit o1"></div>
+        <div class="orbit o2"></div>
+
+        <div class="book-lattice" id="bookLattice"></div>
+        <div class="risk-radar" id="riskRadar">
+          <div class="radar-disc"></div>
+          <div class="radar-ring" style="width:70%;height:70%;top:15%;left:15%;"></div>
+          <div class="radar-ring" style="width:40%;height:40%;top:30%;left:30%;"></div>
+          <div class="radar-sweep"></div>
+        </div>
+      </div>
+
+      <div class="hud hud-id" id="hudId">
+        <div class="exch">NSE</div>
+        <div class="city"><span class="live"></span>National Stock Exchange · Mumbai</div>
+      </div>
+      <div class="hud hud-status" id="hudStatus">
+        <div class="label" id="statusLabel">Ingesting</div>
+        <div class="value mono" id="statusValue">1,248,932</div>
+        <div class="caption" id="statusCaption">ticks / sec · illustrative</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="closing">
+  <h3>Bring your desk closer to the tape.</h3>
+  <p>From raw exchange feed to portfolio-level risk, QuantPulse keeps every step in one continuously updating view — built for desks that price and manage risk in the same breath.</p>
+  <button class="cta-primary">Request access →</button>
+</section>
+<div class="footer-note">Prototype — hero + scrollytelling scene, for design review.</div>
+
+<script>
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- Nav glass ---------------- */
+const nav = document.getElementById('navbar');
+window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 40));
+
+/* ---------------- Build order-book lattice levels ---------------- */
+const bookLattice = document.getElementById('bookLattice');
+const levelWidths = [86,74,64,55,47,40,33,27]; // percent-ish, deepest at bottom
+levelWidths.forEach((w, i) => {
+  const level = document.createElement('div');
+  level.className = 'ob-level';
+  level.style.width = '260px';
+  level.style.marginLeft = '-130px';
+  level.style.marginTop = (-90 + i*15) + 'px';
+  level.style.transform = `translateZ(${i * 5}px)`;
+  level.innerHTML = `
+    <div class="ob-mid"></div>
+    <div class="ob-bid" style="width:${w/2}%;"></div>
+    <div class="ob-ask" style="width:${w*0.42}%;"></div>`;
+  bookLattice.appendChild(level);
+});
+
+/* ---------------- Radar blips ---------------- */
+const riskRadar = document.getElementById('riskRadar');
+const blipSeed = [[30,20],[70,55],[45,75],[62,30],[20,60]];
+blipSeed.forEach(([x,y]) => {
+  const b = document.createElement('div');
+  b.className = 'blip';
+  b.style.left = x + '%';
+  b.style.top = y + '%';
+  riskRadar.appendChild(b);
+});
+
+/* ---------------- GSAP intro + scroll-linked 3D scene ---------------- */
+if (window.gsap) {
+  gsap.registerPlugin(ScrollTrigger);
+
+  gsap.timeline({ delay: reduceMotion ? 0 : 0.5 })
+    .to(['#k1'], { opacity:1, duration:.6 }, 0)
+    .fromTo('#h1', {opacity:0,y:16}, {opacity:1,y:0,duration:.8}, .12)
+    .fromTo('#l1', {opacity:0,y:14}, {opacity:1,y:0,duration:.7}, .28)
+    .fromTo('#c1', {opacity:0,y:12}, {opacity:1,y:0,duration:.6}, .4)
+    .fromTo('#r1', {opacity:0,y:10}, {opacity:1,y:0,duration:.6}, .5)
+    .fromTo('#sc1', {opacity:0}, {opacity:1,duration:.6}, .75)
+    .fromTo('#hudId', {opacity:0,x:-14}, {opacity:1,x:0,duration:.6}, .3)
+    .fromTo('#hudStatus', {opacity:0,y:10}, {opacity:1,y:0,duration:.6}, .45);
+
+  gsap.utils.toArray('#beat-book .kicker, #beat-book h2, #beat-book .lede, #beat-book .legend').forEach(el=>{
+    gsap.fromTo(el, {opacity:0,y:18}, {opacity:1,y:0,duration:.7,
+      scrollTrigger:{ trigger:el, start:'top 82%' } });
+  });
+  gsap.utils.toArray('#beat-risk .kicker, #beat-risk h2, #beat-risk .lede, #beat-risk .legend').forEach(el=>{
+    gsap.fromTo(el, {opacity:0,y:18}, {opacity:1,y:0,duration:.7,
+      scrollTrigger:{ trigger:el, start:'top 82%' } });
+  });
+
+  const rig = document.getElementById('rig');
+  const bookL = document.getElementById('bookLattice');
+  const radar = document.getElementById('riskRadar');
+  const statusLabel = document.getElementById('statusLabel');
+  const statusValue = document.getElementById('statusValue');
+  const statusCaption = document.getElementById('statusCaption');
+  const streamCanvas = document.getElementById('stream');
+
+  let lastPhase = -1;
+  function setPhase(p){
+    if (p === lastPhase) return;
+    lastPhase = p;
+    if (p === 0){
+      statusLabel.textContent = 'Ingesting';
+      statusCaption.textContent = 'ticks / sec · illustrative';
+    } else if (p === 1){
+      statusLabel.textContent = 'Order flow imbalance';
+      statusCaption.textContent = 'bid − ask, top 5 levels';
+    } else {
+      statusLabel.textContent = 'Portfolio VaR';
+      statusCaption.textContent = '99% · 1-day · illustrative';
+    }
+  }
+
+  ScrollTrigger.create({
+    trigger: '#scene',
+    start: 'top top',
+    end: 'bottom bottom',
+    scrub: 0.8,
+    onUpdate(self){
+      const p = self.progress; // 0 -> 1 across the whole scene
+      if (reduceMotion){
+        gsap.set(rig, { rotationY: 0 });
+      } else {
+        gsap.set(rig, { rotationY: p * 220, rotationX: -6 + p*4 });
+      }
+
+      // three bands: 0-0.4 core, 0.35-0.7 book, 0.65-1 radar (soft crossfade)
+      const coreOp = 1 - smooth(p, 0.28, 0.42);
+      const bookOp = smooth(p, 0.3, 0.44) * (1 - smooth(p, 0.6, 0.74));
+      const radarOp = smooth(p, 0.62, 0.76);
+
+      document.getElementById('coreNode').style.opacity = coreOp;
+      bookL.style.opacity = bookOp;
+      bookL.style.transform = `translateZ(${-40 + bookOp*40}px) scale(${0.9 + bookOp*0.15})`;
+      radar.style.opacity = radarOp;
+      radar.style.transform = `translateZ(${-30 + radarOp*30}px) scale(${0.88 + radarOp*0.14})`;
+
+      streamCanvas.style.opacity = 1 - smooth(p, 0.22, 0.4);
+
+      setPhase(p < 0.35 ? 0 : (p < 0.66 ? 1 : 2));
+    }
+  });
+
+  function smooth(p, a, b){
+    const t = Math.min(1, Math.max(0, (p - a) / (b - a)));
+    return t*t*(3 - 2*t);
+  }
+}
+
+/* ---------------- Data-stream particles (incoming raw ticks / outgoing signals) ---------------- */
+const canvas = document.getElementById('stream');
+const ctx = canvas.getContext('2d');
+let W,H;
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  W = rect.width; H = rect.height;
+  canvas.width = W*dpr; canvas.height = H*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function makeParticle(kind){
+  const cx = W/2, cy = H/2;
+  const angle = Math.random()*Math.PI*2;
+  const edgeR = Math.max(W,H)*0.62;
+  if (kind === 'in'){
+    return { kind, x: cx + Math.cos(angle)*edgeR, y: cy + Math.sin(angle)*edgeR, t:0, speed: 0.006+Math.random()*0.006, angle };
+  }
+  return { kind, x: cx, y: cy, t:0, speed: 0.007+Math.random()*0.007, angle: Math.random()*Math.PI*2, edgeR };
+}
+let particles = [];
+for (let i=0;i<26;i++) particles.push(makeParticle(Math.random()<0.6?'in':'out'));
+
+function drawStreams(){
+  ctx.clearRect(0,0,W,H);
+  const cx = W/2, cy = H/2;
+  particles.forEach(p => {
+    p.t += p.speed;
+    if (p.t > 1){ Object.assign(p, makeParticle(p.kind)); p.t = 0; }
+    let x,y;
+    if (p.kind === 'in'){
+      const edgeR = Math.max(W,H)*0.62;
+      x = cx + Math.cos(p.angle) * edgeR * (1-p.t);
+      y = cy + Math.sin(p.angle) * edgeR * (1-p.t);
+    } else {
+      x = cx + Math.cos(p.angle) * p.edgeR * p.t;
+      y = cy + Math.sin(p.angle) * p.edgeR * p.t;
+    }
+    const color = p.kind === 'in' ? '79,227,214' : '255,180,84';
+    const alpha = p.kind === 'in' ? (1-p.t)*0.9 + 0.1 : p.t*0.9 + 0.05;
+    ctx.beginPath();
+    ctx.arc(x,y,2.1,0,Math.PI*2);
+    ctx.fillStyle = `rgba(${color},${alpha})`;
+    ctx.shadowColor = `rgba(${color},0.8)`;
+    ctx.shadowBlur = 8;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+  if (!reduceMotion) requestAnimationFrame(drawStreams);
+}
+drawStreams();
+
+/* ---------------- Illustrative tick counter ---------------- */
+if (!reduceMotion){
+  const statusValue = document.getElementById('statusValue');
+  let base = 1248932;
+  setInterval(() => {
+    if (statusValue.textContent && lastLabelIsIngest()){
+      base += Math.floor(Math.random()*400 - 150);
+      statusValue.textContent = base.toLocaleString('en-US');
+    }
+  }, 1300);
+  function lastLabelIsIngest(){
+    return document.getElementById('statusLabel').textContent === 'Ingesting';
+  }
+}
+</script>
+
+</body>
+</html>
