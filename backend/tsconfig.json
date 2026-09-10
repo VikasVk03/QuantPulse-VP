@@ -17,7 +17,7 @@
   },
   "include": [
     "src/**/*.ts"
-  ],
+, "test/shared/validation/dataset.validation.test.ts"  ],
   "exclude": [
     "node_modules",
     "dist",
