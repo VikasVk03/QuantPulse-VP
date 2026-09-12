@@ -5,38 +5,48 @@ import type {
 
 import { getMongoDB } from "../mongodb.js";
 
+import type { MarketDataDocument } from "../models/MarketData.js";
+
 import type {
     MarketBar,
     MarketBarQuery,
     MarketDataRepository,
 } from "./MarketDataRepository.js";
 
-interface MarketBarDocument {
-    datasetId: string;
-    timestamp: Date;
-    symbol: string;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-    volume: number;
-}
+
 
 export class MongoMarketDataRepository
     implements MarketDataRepository {
-    private readonly collection: Collection<MarketBarDocument>;
+    private readonly collection: Collection<MarketDataDocument>;
 
     constructor() {
         this.collection =
-            getMongoDB().collection<MarketBarDocument>(
+            getMongoDB().collection<MarketDataDocument>(
                 "market_bars",
             );
+    }
+
+    async ensureIndexes(): Promise<void> {
+        await this.collection.createIndex(
+            {
+                datasetId: 1,
+                timestamp: 1,
+            },
+        );
+
+        await this.collection.createIndex(
+            {
+                datasetId: 1,
+                symbol: 1,
+                timestamp: 1,
+            },
+        );
     }
 
     async getBars(
         query: MarketBarQuery,
     ): Promise<MarketBar[]> {
-        const filter: Filter<MarketBarDocument> = {
+        const filter: Filter<MarketDataDocument> = {
             datasetId: query.datasetId,
         };
 
@@ -88,7 +98,7 @@ export class MongoMarketDataRepository
             return 0;
         }
 
-        const documents: MarketBarDocument[] = bars.map(
+        const documents: MarketDataDocument[] = bars.map(
             (bar) => ({
                 datasetId: bar.datasetId,
                 timestamp: bar.timestamp,
