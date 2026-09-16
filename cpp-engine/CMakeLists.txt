@@ -56,6 +56,7 @@ add_library(
     src/application/analytics/MarketDataAnalytics.cpp
     src/infrastructure/serialization/MarketAnalyticsJson.cpp
     src/infrastructure/serialization/MarketAnalyticsRequestJson.cpp
+    src/application/backtesting/BacktestingApplication.cpp
 )
 
 target_include_directories(
@@ -156,6 +157,7 @@ add_executable(
     tests/infrastructure/CsvMarketDataReaderTest.cpp
     tests/infrastructure/MarketAnalyticsJsonTest.cpp
     tests/infrastructure/MarketAnalyticsRequestJsonTest.cpp
+    tests/application/BacktestingApplicationTest.cpp
 )
 
 target_link_libraries(
@@ -231,6 +233,7 @@ add_executable(
     benchmarks/infrastructure/MarketAnalyticsJsonBenchmark.cpp
     benchmarks/application/MarketDataAnalyticsBenchmark.cpp
     benchmarks/infrastructure/CsvMarketDataReaderBenchmark.cpp
+    benchmarks/application/BacktestingApplicationBenchmark.cpp
 )
 
 target_link_libraries(
