@@ -229,6 +229,8 @@ add_executable(
     benchmarks/order_flow/OrderFlowEngineBenchmark.cpp
     benchmarks/liquidity/LiquidityEngineBenchmark.cpp
     benchmarks/infrastructure/MarketAnalyticsJsonBenchmark.cpp
+    benchmarks/application/MarketDataAnalyticsBenchmark.cpp
+    benchmarks/infrastructure/CsvMarketDataReaderBenchmark.cpp
 )
 
 target_link_libraries(
