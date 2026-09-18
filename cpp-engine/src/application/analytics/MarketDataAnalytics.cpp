@@ -3,8 +3,9 @@
 #include "quantpulse/domain/returns/ReturnsEngine.hpp"
 #include "quantpulse/domain/volatility/VolatilityEngine.hpp"
 
-#include <utility>
+#include <cmath>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace quantpulse::application::analytics
@@ -31,13 +32,68 @@ namespace quantpulse::application::analytics
         std::vector<double> prices;
         prices.reserve(bars.size());
 
-        double totalVolume = 0.0;
-
         std::vector<MarketSeriesPoint> series;
         series.reserve(bars.size());
 
+        double totalVolume = 0.0;
+
+        std::int64_t previousTimestamp = 0;
+        bool firstBar = true;
+
         for (const auto &bar : bars)
         {
+            if (bar.symbol != symbol)
+            {
+                throw std::invalid_argument(
+                    "Market bar symbol does not match requested symbol");
+            }
+
+            if (!std::isfinite(bar.open) ||
+                !std::isfinite(bar.high) ||
+                !std::isfinite(bar.low) ||
+                !std::isfinite(bar.close) ||
+                !std::isfinite(bar.volume))
+            {
+                throw std::invalid_argument(
+                    "Market bar contains non-finite values");
+            }
+
+            if (bar.high < bar.low)
+            {
+                throw std::invalid_argument(
+                    "Market bar high cannot be lower than low");
+            }
+
+            if (bar.open < bar.low ||
+                bar.open > bar.high)
+            {
+                throw std::invalid_argument(
+                    "Market bar open must be within high-low range");
+            }
+
+            if (bar.close < bar.low ||
+                bar.close > bar.high)
+            {
+                throw std::invalid_argument(
+                    "Market bar close must be within high-low range");
+            }
+
+            if (bar.volume < 0.0)
+            {
+                throw std::invalid_argument(
+                    "Market bar volume cannot be negative");
+            }
+
+            if (!firstBar &&
+                bar.timestamp <= previousTimestamp)
+            {
+                throw std::invalid_argument(
+                    "Market bar timestamps must be strictly increasing");
+            }
+
+            previousTimestamp = bar.timestamp;
+            firstBar = false;
+
             prices.push_back(bar.close);
             totalVolume += bar.volume;
 
@@ -53,6 +109,12 @@ namespace quantpulse::application::analytics
 
         const double firstPrice = prices.front();
         const double lastPrice = prices.back();
+
+        if (firstPrice == 0.0)
+        {
+            throw std::invalid_argument(
+                "First price cannot be zero");
+        }
 
         const double returnPercentage =
             ((lastPrice - firstPrice) / firstPrice) * 100.0;

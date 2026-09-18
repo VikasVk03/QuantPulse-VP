@@ -2,6 +2,10 @@ import { spawn } from "node:child_process";
 
 import { config } from "../../config/env.js";
 
+import type {
+  MarketBar,
+} from "../database/repositories/MarketDataRepository.js";
+
 export interface MarketSeriesPoint {
   timestamp: number;
   open: number;
@@ -23,6 +27,18 @@ export interface MarketAnalyticsResult {
   series: MarketSeriesPoint[];
 }
 
+interface MarketAnalysisRequest {
+  symbol: string;
+  bars: Array<{
+    timestamp: number;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+  }>;
+}
+
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
@@ -35,7 +51,9 @@ export function validateMarketAnalyticsResult(
   value: unknown,
 ): MarketAnalyticsResult {
   if (!isRecord(value)) {
-    throw new Error("C++ engine returned an invalid market analysis.");
+    throw new Error(
+      "C++ engine returned an invalid market analysis.",
+    );
   }
 
   if (
@@ -49,7 +67,9 @@ export function validateMarketAnalyticsResult(
     !isFiniteNumber(value.volatility) ||
     !Array.isArray(value.series)
   ) {
-    throw new Error("C++ engine returned an invalid market analysis.");
+    throw new Error(
+      "C++ engine returned an invalid market analysis.",
+    );
   }
 
   const series = value.series.map((point) => {
@@ -62,7 +82,9 @@ export function validateMarketAnalyticsResult(
       !isFiniteNumber(point.close) ||
       !isFiniteNumber(point.volume)
     ) {
-      throw new Error("C++ engine returned an invalid market series point.");
+      throw new Error(
+        "C++ engine returned an invalid market series point.",
+      );
     }
 
     return {
@@ -89,10 +111,38 @@ export function validateMarketAnalyticsResult(
 }
 
 export function runMarketAnalysis(
-  filePath: string,
+  symbol: string,
+  bars: MarketBar[],
 ): Promise<MarketAnalyticsResult> {
+  if (symbol.trim().length === 0) {
+    return Promise.reject(
+      new Error("Market analysis symbol cannot be empty."),
+    );
+  }
+
+  if (bars.length === 0) {
+    return Promise.reject(
+      new Error("Cannot analyze empty market data."),
+    );
+  }
+
+  const request: MarketAnalysisRequest = {
+    symbol: symbol.toUpperCase(),
+    bars: bars.map((bar) => ({
+      timestamp: bar.timestamp.getTime(),
+      open: bar.open,
+      high: bar.high,
+      low: bar.low,
+      close: bar.close,
+      volume: bar.volume,
+    })),
+  };
+
   return new Promise((resolve, reject) => {
-    const child = spawn(config.cppEnginePath, ["analyze", filePath]);
+    const child = spawn(
+      config.cppEnginePath,
+      ["analyze-json"],
+    );
 
     let stdout = "";
     let stderr = "";
@@ -111,20 +161,40 @@ export function runMarketAnalysis(
 
     child.on("close", (code) => {
       if (code !== 0) {
-        reject(new Error(stderr || `C++ engine exited with code ${code}`));
+        reject(
+          new Error(
+            stderr.trim() ||
+            `C++ engine exited with code ${code}`,
+          ),
+        );
+
         return;
       }
 
       try {
-        resolve(validateMarketAnalyticsResult(JSON.parse(stdout.trim()) as unknown));
+        const parsed = JSON.parse(
+          stdout.trim(),
+        ) as unknown;
+
+        resolve(
+          validateMarketAnalyticsResult(parsed),
+        );
       } catch (error) {
         reject(
           new Error(
-            `Failed to parse C++ engine response: ${error instanceof Error ? error.message : String(error)
+            `Failed to parse C++ engine response: ${error instanceof Error
+              ? error.message
+              : String(error)
             }`,
           ),
         );
       }
     });
+
+    child.stdin.write(
+      JSON.stringify(request),
+    );
+
+    child.stdin.end();
   });
 }

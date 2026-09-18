@@ -87,4 +87,108 @@ namespace quantpulse::application::analytics
             std::invalid_argument);
     }
 
+    TEST(MarketDataAnalyticsTest, RejectsSymbolMismatch)
+    {
+        const std::vector<
+            quantpulse::domain::market_data::MarketBar>
+            bars{
+                {.timestamp = 1,
+                 .symbol = "OTHER",
+                 .open = 100.0,
+                 .high = 101.0,
+                 .low = 99.0,
+                 .close = 100.0,
+                 .volume = 100.0}};
+
+        EXPECT_THROW(
+            MarketDataAnalytics::analyze("TEST", bars),
+            std::invalid_argument);
+    }
+
+    TEST(MarketDataAnalyticsTest, RejectsInvalidHighLow)
+    {
+        const std::vector<
+            quantpulse::domain::market_data::MarketBar>
+            bars{
+                {.timestamp = 1,
+                 .symbol = "TEST",
+                 .open = 100.0,
+                 .high = 98.0,
+                 .low = 99.0,
+                 .close = 100.0,
+                 .volume = 100.0}};
+
+        EXPECT_THROW(
+            MarketDataAnalytics::analyze("TEST", bars),
+            std::invalid_argument);
+    }
+
+    TEST(MarketDataAnalyticsTest, RejectsNegativeVolume)
+    {
+        const std::vector<
+            quantpulse::domain::market_data::MarketBar>
+            bars{
+                {.timestamp = 1,
+                 .symbol = "TEST",
+                 .open = 100.0,
+                 .high = 101.0,
+                 .low = 99.0,
+                 .close = 100.0,
+                 .volume = -100.0}};
+
+        EXPECT_THROW(
+            MarketDataAnalytics::analyze("TEST", bars),
+            std::invalid_argument);
+    }
+
+    TEST(MarketDataAnalyticsTest, RejectsNonIncreasingTimestamps)
+    {
+        const std::vector<
+            quantpulse::domain::market_data::MarketBar>
+            bars{
+                {.timestamp = 2,
+                 .symbol = "TEST",
+                 .open = 100.0,
+                 .high = 101.0,
+                 .low = 99.0,
+                 .close = 100.0,
+                 .volume = 100.0},
+                {.timestamp = 1,
+                 .symbol = "TEST",
+                 .open = 101.0,
+                 .high = 102.0,
+                 .low = 100.0,
+                 .close = 101.0,
+                 .volume = 200.0}};
+
+        EXPECT_THROW(
+            MarketDataAnalytics::analyze("TEST", bars),
+            std::invalid_argument);
+    }
+
+    TEST(MarketDataAnalyticsTest, RejectsZeroFirstPrice)
+    {
+        const std::vector<
+            quantpulse::domain::market_data::MarketBar>
+            bars{
+                {.timestamp = 1,
+                 .symbol = "TEST",
+                 .open = 0.0,
+                 .high = 1.0,
+                 .low = 0.0,
+                 .close = 0.0,
+                 .volume = 100.0},
+                {.timestamp = 2,
+                 .symbol = "TEST",
+                 .open = 1.0,
+                 .high = 2.0,
+                 .low = 0.5,
+                 .close = 1.0,
+                 .volume = 200.0}};
+
+        EXPECT_THROW(
+            MarketDataAnalytics::analyze("TEST", bars),
+            std::invalid_argument);
+    }
+
 } // namespace quantpulse::application::analytics
