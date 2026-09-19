@@ -7,11 +7,14 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 
 export default function App() {
   const [view, setView] = useState<"landing" | "terminal">(() => {
-    // Check URL hash or query param if user linked directly to terminal
     if (typeof window !== "undefined") {
       const hash = window.location.hash;
-      if (hash === "#terminal") return "terminal";
+
+      if (hash === "#terminal") {
+        return "terminal";
+      }
     }
+
     return "landing";
   });
 
@@ -19,10 +22,16 @@ export default function App() {
     const handleHashChange = () => {
       if (window.location.hash === "#terminal") {
         setView("terminal");
+      } else {
+        setView("landing");
       }
     };
+
     window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
+
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
   }, []);
 
   const handleLaunchTerminal = () => {
@@ -37,19 +46,26 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  if (view === "landing") {
-    return <LandingPage onLaunchTerminal={handleLaunchTerminal} />;
-  }
-
   return (
     <>
       <div className="min-h-screen bg-background text-foreground">
-        <Header onViewLanding={handleViewLanding} />
-        <main>
-          <MarketDashboard />
-        </main>
+        {view === "landing" ? (
+          <LandingPage onLaunchTerminal={handleLaunchTerminal} />
+        ) : (
+          <>
+            <Header onViewLanding={handleViewLanding} />
+
+            <main>
+              <MarketDashboard />
+            </main>
+          </>
+        )}
       </div>
+
+      {/* Vercel Analytics */}
       <Analytics />
+
+      {/* Vercel Speed Insights */}
       <SpeedInsights />
     </>
   );
