@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { LandingPage } from "../pages/LandingPage";
 import { Header } from "../components/layout/Header";
 import { MarketDashboard } from "../components/market/MarketDashboard";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 export default function App() {
   const [view, setView] = useState<"landing" | "terminal">(() => {
@@ -40,11 +42,15 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Header onViewLanding={handleViewLanding} />
-      <main>
-        <MarketDashboard />
-      </main>
-    </div>
+    <>
+      <div className="min-h-screen bg-background text-foreground">
+        <Header onViewLanding={handleViewLanding} />
+        <main>
+          <MarketDashboard />
+        </main>
+      </div>
+      <Analytics />
+      <SpeedInsights />
+    </>
   );
 }
