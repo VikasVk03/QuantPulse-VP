@@ -20,3 +20,20 @@ ADR-006
 Why domain-driven Node modules?
 
 This is excellent interview material.
+
+
+##### install json parser in Linux
+
+Option B — Linux system package
+
+On Ubuntu/Debian:
+
+sudo apt update
+sudo apt install nlohmann-json3-dev
+
+Then:
+
+cmake -S . -B build-release -G Ninja
+cmake --build build-release
+
+Again, your CMake doesn't need to change.

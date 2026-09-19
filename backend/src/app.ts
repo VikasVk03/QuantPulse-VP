@@ -1,28 +1,47 @@
 import express from "express";
 import cors from "cors";
 
+import { createDatasetRoutes } from "./modules/market-data/dataset.routes.js";
 import marketRoutes from "./modules/market-data/market.routes.js";
+import {
+  createMarketDataRoutes,
+} from "./modules/market-data/market-data.routes.js";
 
-const app = express();
+import { errorHandler } from "./shared/errors/error-handler.js";
 
-app.use(cors());
+const createApp = () => {
+  const app = express();
 
-app.use(express.json());
+  app.use(cors());
 
-app.get("/", (_req, res) => {
-  res.json({
-    status: "OK",
-    service: "Backend is running",
+  app.use(express.json());
+
+  app.get("/", (_req, res) => {
+    res.json({
+      status: "OK",
+      service: "QuantPulse Backend",
+    });
   });
-});
 
-app.get("/health", (_req, res) => {
-  res.json({
-    status: "ok",
-    service: "quantpulse-backend",
+  app.get("/health", (_req, res) => {
+    res.status(200).json({
+      status: "ok",
+      service: "quantpulse-backend",
+    });
   });
-});
 
-app.use("/api/market", marketRoutes);
+  app.use("/api/market", marketRoutes);
 
-export default app;
+  app.use("/api/datasets", createDatasetRoutes());
+
+  app.use(
+    "/api/market-data",
+    createMarketDataRoutes(),
+  );
+
+  app.use(errorHandler);
+
+  return app;
+};
+
+export default createApp;

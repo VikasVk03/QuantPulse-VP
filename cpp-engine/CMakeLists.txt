@@ -16,6 +16,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(FetchContent)
 
+find_package(nlohmann_json CONFIG REQUIRED)
+
 add_library(
     quantpulse_core
     src/domain/statistics/StatisticsEngine.cpp
@@ -53,12 +55,20 @@ add_library(
     src/infrastructure/market_data/CsvMarketDataReader.cpp
     src/application/analytics/MarketDataAnalytics.cpp
     src/infrastructure/serialization/MarketAnalyticsJson.cpp
+    src/infrastructure/serialization/MarketAnalyticsRequestJson.cpp
+    src/application/backtesting/BacktestingApplication.cpp
 )
 
 target_include_directories(
     quantpulse_core
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(
+    quantpulse_core
+    PUBLIC
+        nlohmann_json::nlohmann_json
 )
 
 if(MSVC)
@@ -146,6 +156,8 @@ add_executable(
     tests/application/MarketDataAnalyticsTest.cpp
     tests/infrastructure/CsvMarketDataReaderTest.cpp
     tests/infrastructure/MarketAnalyticsJsonTest.cpp
+    tests/infrastructure/MarketAnalyticsRequestJsonTest.cpp
+    tests/application/BacktestingApplicationTest.cpp
 )
 
 target_link_libraries(
@@ -218,6 +230,10 @@ add_executable(
     benchmarks/latency/LatencyEngineBenchmark.cpp
     benchmarks/order_flow/OrderFlowEngineBenchmark.cpp
     benchmarks/liquidity/LiquidityEngineBenchmark.cpp
+    benchmarks/infrastructure/MarketAnalyticsJsonBenchmark.cpp
+    benchmarks/application/MarketDataAnalyticsBenchmark.cpp
+    benchmarks/infrastructure/CsvMarketDataReaderBenchmark.cpp
+    benchmarks/application/BacktestingApplicationBenchmark.cpp
 )
 
 target_link_libraries(

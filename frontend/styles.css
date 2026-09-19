@@ -5,42 +5,278 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * ============================================================
+ * QUANTPULSE — DESIGN SYSTEM
+ * ============================================================
+ *
+ * Visual language:
+ *   Institutional Finance
+ *   + Quantitative Intelligence
+ *   + Futuristic Technology
+ *
+ * Primary palette:
+ *   Deep Navy → Electric Blue → Cyan → Quant Purple
+ *
+ * Semantic:
+ *   Green = Positive / BUY / Healthy
+ *   Red   = Negative / SELL / Risk
+ *   Amber = Warning / HOLD
+ *
+ * ============================================================
+ */
+
 :root {
-    --radius: 0.5rem;
+    /* --------------------------------------------------------
+     * Core
+     * -------------------------------------------------------- */
 
-    --background: oklch(0.13 0.025 255);
-    --foreground: oklch(0.96 0.01 255);
+    --radius: 0.75rem;
 
-    --card: oklch(0.17 0.025 255);
-    --card-foreground: oklch(0.96 0.01 255);
+    /*
+     * Deep navy background.
+     *
+     * Designed to work with:
+     *   bg-background
+     *   text-foreground
+     */
 
-    --popover: oklch(0.17 0.025 255);
-    --popover-foreground: oklch(0.96 0.01 255);
+    --background: oklch(0.105 0.025 255);
+    --foreground: oklch(0.97 0.012 255);
 
-    --primary: oklch(0.68 0.17 255);
-    --primary-foreground: oklch(0.98 0.01 255);
+    /* --------------------------------------------------------
+     * Surfaces
+     * -------------------------------------------------------- */
 
-    --secondary: oklch(0.21 0.03 255);
-    --secondary-foreground: oklch(0.9 0.02 255);
+    --card: oklch(0.145 0.028 255);
+    --card-foreground: oklch(0.96 0.012 255);
 
-    --muted: oklch(0.2 0.025 255);
+    --popover: oklch(0.155 0.03 255);
+    --popover-foreground: oklch(0.96 0.012 255);
+
+    /*
+     * Slightly elevated surface.
+     *
+     * Example:
+     *   bg-secondary
+     */
+
+    --secondary: oklch(0.18 0.032 255);
+    --secondary-foreground: oklch(0.91 0.018 255);
+
+    /*
+     * Muted surface.
+     */
+
+    --muted: oklch(0.155 0.026 255);
     --muted-foreground: oklch(0.68 0.025 255);
 
-    --accent: oklch(0.23 0.035 255);
-    --accent-foreground: oklch(0.96 0.01 255);
+    /*
+     * Interactive / hover surface.
+     */
 
-    --destructive: oklch(0.65 0.2 25);
+    --accent: oklch(0.205 0.045 255);
+    --accent-foreground: oklch(0.97 0.012 255);
 
-    --border: oklch(0.28 0.035 255);
-    --input: oklch(0.24 0.03 255);
-    --ring: oklch(0.68 0.17 255);
+    /* --------------------------------------------------------
+     * QuantPulse Brand
+     * -------------------------------------------------------- */
 
-    --chart-1: oklch(0.68 0.17 255);
-    --chart-2: oklch(0.72 0.15 165);
-    --chart-3: oklch(0.72 0.15 85);
-    --chart-4: oklch(0.7 0.17 310);
-    --chart-5: oklch(0.7 0.18 25);
+    /*
+     * Electric Quant Blue
+     *
+     * Main buttons
+     * Links
+     * Active navigation
+     * Primary charts
+     */
+
+    --primary: oklch(0.67 0.18 255);
+    --primary-foreground: oklch(0.985 0.008 255);
+
+    /*
+     * Cyan is used for:
+     *   live data
+     *   data streams
+     *   technology
+     *   highlights
+     */
+
+    --cyan: oklch(0.78 0.16 205);
+    --cyan-foreground: oklch(0.12 0.025 255);
+
+    /*
+     * Quant Purple
+     *
+     * AI
+     * Intelligence
+     * Advanced analytics
+     */
+
+    --purple: oklch(0.65 0.22 300);
+    --purple-foreground: oklch(0.98 0.01 300);
+
+    /*
+     * Blue-violet brand highlight.
+     */
+
+    --brand-gradient-start: oklch(0.67 0.18 255);
+    --brand-gradient-end: oklch(0.65 0.22 300);
+
+    /* --------------------------------------------------------
+     * Semantic Trading Colors
+     * -------------------------------------------------------- */
+
+    /*
+     * BUY / Positive / Profit / Healthy
+     */
+
+    --success: oklch(0.72 0.17 165);
+    --success-foreground: oklch(0.12 0.025 165);
+
+    /*
+     * SELL / Loss / Critical risk
+     */
+
+    --destructive: oklch(0.64 0.21 25);
+    --destructive-foreground: oklch(0.98 0.01 25);
+
+    /*
+     * HOLD / Warning / Medium risk
+     */
+
+    --warning: oklch(0.78 0.16 85);
+    --warning-foreground: oklch(0.18 0.035 85);
+
+    /* --------------------------------------------------------
+     * Borders / Inputs / Focus
+     * -------------------------------------------------------- */
+
+    /*
+     * Very subtle borders.
+     *
+     * The dashboard should feel like glass/metal,
+     * not like boxes with heavy borders.
+     */
+
+    --border: oklch(0.27 0.045 255);
+
+    --input: oklch(0.205 0.035 255);
+
+    /*
+     * Focus ring uses Quant Blue.
+     */
+
+    --ring: oklch(0.67 0.18 255);
+
+    /* --------------------------------------------------------
+     * Charts
+     * -------------------------------------------------------- */
+
+    /*
+     * Chart 1 — Primary Quant Blue
+     */
+
+    --chart-1: oklch(0.67 0.18 255);
+
+    /*
+     * Chart 2 — Live / Positive Cyan-Green
+     */
+
+    --chart-2: oklch(0.72 0.17 165);
+
+    /*
+     * Chart 3 — Warning / Medium Risk
+     */
+
+    --chart-3: oklch(0.78 0.16 85);
+
+    /*
+     * Chart 4 — AI / Quant Purple
+     */
+
+    --chart-4: oklch(0.65 0.22 300);
+
+    /*
+     * Chart 5 — Risk / Negative
+     */
+
+    --chart-5: oklch(0.64 0.21 25);
+
+    /* --------------------------------------------------------
+     * QuantPulse-specific tokens
+     * -------------------------------------------------------- */
+
+    /*
+     * Background layers
+     */
+
+    --surface-deep: oklch(0.085 0.022 255);
+    --surface-base: oklch(0.105 0.025 255);
+    --surface-raised: oklch(0.145 0.028 255);
+    --surface-elevated: oklch(0.18 0.032 255);
+
+    /*
+     * Glass panels
+     */
+
+    --glass: oklch(0.16 0.035 255 / 0.72);
+    --glass-border: oklch(0.65 0.12 255 / 0.16);
+
+    /*
+     * Glow values.
+     *
+     * Useful with arbitrary Tailwind utilities:
+     *
+     *   shadow-[0_0_30px_var(--glow-blue)]
+     */
+
+    --glow-blue: oklch(0.67 0.18 255 / 0.28);
+    --glow-cyan: oklch(0.78 0.16 205 / 0.24);
+    --glow-purple: oklch(0.65 0.22 300 / 0.26);
+    --glow-success: oklch(0.72 0.17 165 / 0.22);
+    --glow-danger: oklch(0.64 0.21 25 / 0.22);
+
+    /*
+     * Data visualization
+     */
+
+    --grid-color: oklch(0.65 0.08 255 / 0.08);
+    --axis-color: oklch(0.65 0.025 255 / 0.5);
+
+    /*
+     * Trading status
+     */
+
+    --buy: oklch(0.72 0.17 165);
+    --sell: oklch(0.64 0.21 25);
+    --hold: oklch(0.78 0.16 85);
+    --live: oklch(0.78 0.16 205);
+
+    /*
+     * Sidebar
+     */
+
+    --sidebar: oklch(0.085 0.022 255);
+    --sidebar-foreground: oklch(0.88 0.018 255);
+
+    --sidebar-primary: oklch(0.67 0.18 255);
+    --sidebar-primary-foreground: oklch(0.98 0.01 255);
+
+    --sidebar-accent: oklch(0.17 0.04 255);
+    --sidebar-accent-foreground: oklch(0.96 0.012 255);
+
+    --sidebar-border: oklch(0.25 0.04 255);
+
+    --sidebar-ring: oklch(0.67 0.18 255);
 }
+
+
+/*
+ * ============================================================
+ * GLOBAL
+ * ============================================================
+ */
 
 * {
     box-sizing: border-box;
@@ -49,15 +285,28 @@
 
 html {
     background: var(--background);
+    color-scheme: dark;
 }
 
 body {
     margin: 0;
     min-width: 320px;
     min-height: 100vh;
-    background: var(--background);
+
+    background:
+        radial-gradient(circle at 75% 10%,
+            oklch(0.67 0.18 255 / 0.055),
+            transparent 28%),
+        radial-gradient(circle at 15% 80%,
+            oklch(0.65 0.22 300 / 0.045),
+            transparent 30%),
+        var(--background);
+
     color: var(--foreground);
+
     font-family:
+        "Geist Variable",
+        Geist,
         Inter,
         ui-sans-serif,
         system-ui,
@@ -65,7 +314,21 @@ body {
         BlinkMacSystemFont,
         "Segoe UI",
         sans-serif;
+
+    font-feature-settings:
+        "rlig" 1,
+        "calt" 1;
+
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
+
+
+/*
+ * ============================================================
+ * FORM ELEMENTS
+ * ============================================================
+ */
 
 button,
 input,
@@ -80,4 +343,180 @@ button {
 
 button:disabled {
     cursor: not-allowed;
+}
+
+
+/*
+ * ============================================================
+ * QUANTPULSE UTILITIES
+ * ============================================================
+ */
+
+/*
+ * Brand gradient:
+ *
+ * Blue → Cyan → Purple
+ */
+
+.quant-gradient {
+    background:
+        linear-gradient(135deg,
+            var(--primary),
+            var(--cyan),
+            var(--purple));
+}
+
+.quant-gradient-text {
+    background:
+        linear-gradient(135deg,
+            var(--primary),
+            var(--cyan),
+            var(--purple));
+
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+
+/*
+ * Futuristic glass panel.
+ */
+
+.quant-glass {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    box-shadow:
+        inset 0 1px 0 oklch(1 0 0 / 0.025),
+        0 12px 40px oklch(0 0 0 / 0.18);
+}
+
+
+/*
+ * Subtle technical grid.
+ *
+ * Perfect for:
+ *   dashboards
+ *   analytics
+ *   hero backgrounds
+ */
+
+.quant-grid {
+    background-image:
+        linear-gradient(to right,
+            var(--grid-color) 1px,
+            transparent 1px),
+        linear-gradient(to bottom,
+            var(--grid-color) 1px,
+            transparent 1px);
+
+    background-size: 32px 32px;
+}
+
+
+/*
+ * Blue neon glow.
+ */
+
+.quant-glow-blue {
+    box-shadow:
+        0 0 25px var(--glow-blue),
+        0 0 60px oklch(0.67 0.18 255 / 0.08);
+}
+
+
+/*
+ * Purple neon glow.
+ */
+
+.quant-glow-purple {
+    box-shadow:
+        0 0 25px var(--glow-purple),
+        0 0 60px oklch(0.65 0.22 300 / 0.08);
+}
+
+
+/*
+ * Cyan glow.
+ */
+
+.quant-glow-cyan {
+    box-shadow:
+        0 0 25px var(--glow-cyan),
+        0 0 60px oklch(0.78 0.16 205 / 0.08);
+}
+
+
+/*
+ * ============================================================
+ * SCROLLBAR
+ * ============================================================
+ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--surface-deep);
+}
+
+::-webkit-scrollbar-thumb {
+    background: oklch(0.32 0.045 255);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.42 0.08 255);
+}
+
+
+/*
+ * ============================================================
+ * SELECTION
+ * ============================================================
+ */
+
+::selection {
+    background: oklch(0.67 0.18 255 / 0.3);
+    color: var(--foreground);
+}
+
+
+/*
+ * ============================================================
+ * LIVE DATA INDICATOR
+ * ============================================================
+ */
+
+.quant-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--live);
+
+    box-shadow:
+        0 0 8px var(--live),
+        0 0 16px oklch(0.78 0.16 205 / 0.4);
+
+    animation: quant-pulse 2s ease-in-out infinite;
+}
+
+@keyframes quant-pulse {
+
+    0%,
+    100% {
+        opacity: 0.65;
+        transform: scale(0.9);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
 }
