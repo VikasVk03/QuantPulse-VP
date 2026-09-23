@@ -83,12 +83,17 @@ Each significant decision should normally have its own ADR file.
 
 # Current Architectural Decisions
 
-| ID                                                         | Decision                    | Status   |
-| ---------------------------------------------------------- | --------------------------- | -------- |
-| [ADR-001](docs/adr/ADR-001-monorepo.md)                    | Monorepo Architecture       | Accepted |
-| [ADR-002](docs/adr/ADR-002-cpp-quant-engine.md)            | C++ Quantitative Engine     | Accepted |
-| [ADR-003](docs/adr/ADR-003-rest-before-grpc.md)            | REST Before gRPC            | Proposed |
-| [ADR-004](docs/adr/ADR-004-mongodb-initial-persistence.md) | MongoDB Initial Persistence | Proposed |
+| ID                                                       | Title                                               |    Status    |    Date    |
+| :------------------------------------------------------- | :-------------------------------------------------- | :----------: | :--------: |
+| [ADR-001](ADR-001-monorepo-architecture.md)              | Monorepo Architecture                               | **Accepted** | 2026-08-14 |
+| [ADR-002](ADR-002-cpp-quantitative-engine.md)            | C++20 Quantitative Engine                           | **Accepted** | 2026-08-14 |
+| [ADR-003](ADR-003-rest-before-grpc.md)                   | REST API Before gRPC Integration                    | **Accepted** | 2026-08-20 |
+| [ADR-004](ADR-004-postgresql-application-persistence.md) | PostgreSQL & Prisma ORM for Application Persistence | **Accepted** | 2026-09-01 |
+| [ADR-005](ADR-005-timescaledb-market-data.md)            | TimescaleDB for High-Volume Time-Series Market Data | **Accepted** | 2026-09-02 |
+| [ADR-006](ADR-006-redis-caching-hot-state.md)            | Redis for In-Memory Caching & Hot State             | **Accepted** | 2026-09-03 |
+| [ADR-007](ADR-007-vercel-render-deployment.md)           | Vercel & Render Cloud Deployment Strategy           | **Accepted** | 2026-09-04 |
+
+---
 
 > **Note:** Proposed decisions represent the current direction under consideration. They are not binding architectural requirements until accepted.
 
@@ -99,18 +104,41 @@ Each significant decision should normally have its own ADR file.
 The current high-level architectural direction is:
 
 ```text
-                    QuantPulse
-                        |
-             +----------+----------+
-             |                     |
-             v                     v
-       React Frontend       Node.js Backend
-                                   |
-                                   v
-                            C++ Quant Engine
-                                   |
-                                   v
-                              Data Storage
+                         INTERNET
+                            │
+                         HTTPS
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │       Vercel        │
+                 │ React 19 + Vite     │
+                 │ TypeScript          │
+                 │ Tailwind + shadcn   │
+                 └──────────┬──────────┘
+                            │ HTTPS / REST / WSS
+                            ▼
+                 ┌─────────────────────┐
+                 │     Render Cloud    │
+                 │ Node.js API Service │
+                 │ Express Gateway     │
+                 └──────┬───────┬──────┘
+                        │       │
+              ┌─────────┘       └──────────┐
+              ▼                            ▼
+     ┌─────────────────┐          ┌─────────────────┐
+     │ C++20 Quant     │          │  Managed Redis  │
+     │ Engine (30 Mods)│          │ Hot Cache /     │
+     │ CMake + Ninja   │          │ Background Jobs │
+     └────────┬────────┘          └─────────────────┘
+              │
+       ┌──────┴──────────────────────────────┐
+       │                                     │
+       ▼                                     ▼
+   ┌────────────────────┐        ┌────────────────────┐
+   │ Managed PostgreSQL │        │ TimescaleDB Cloud  │
+   │ Prisma ORM Access  │        │ High-Volume Ticks  │
+   │ Relational State   │        │ Market Time-Series │
+   └────────────────────┘        └────────────────────┘
 ```
 
 The architecture is intentionally designed so that the frontend, application backend, quantitative computation layer, and persistence layer can evolve independently while maintaining clear boundaries.
@@ -442,7 +470,7 @@ High-volume time-series requirements should be evaluated independently based on 
 
 This decision should be revisited once actual market-data requirements are understood.
 
-[Read ADR-004 →](docs/adr/ADR-004-mongodb-initial-persistence.md)
+[Read ADR-004 →](docs/adr/ADR-004-postgresql-application-persistence.md)
 
 ---
 
@@ -689,12 +717,15 @@ ADRs should cover decisions significant enough to have meaningful architectural 
 
 # Current Status Summary
 
-| ID      | Decision                    | Status       |
-| ------- | --------------------------- | ------------ |
-| ADR-001 | Monorepo architecture       | **Accepted** |
-| ADR-002 | C++ quantitative engine     | **Accepted** |
-| ADR-003 | REST before gRPC            | **Proposed** |
-| ADR-004 | MongoDB initial persistence | **Proposed** |
+| ID      | Decision                                            | Status       |
+| ------- | --------------------------------------------------- | ------------ |
+| ADR-001 | Monorepo architecture                               | **Accepted** |
+| ADR-002 | C++ quantitative engine                             | **Accepted** |
+| ADR-003 | REST before gRPC Integration                        | **Accepted** |
+| ADR-004 | PostgreSQL & Prisma ORM for Application Persistence | **Accepted** |
+| ADR-005 | TimescaleDB for High-Volume Time-Series Market Data | **Accepted** |
+| ADR-006 | Redis for In-Memory Caching & Hot State             | **Accepted** |
+| ADR-007 | Vercel & Render Cloud Deployment Strategy           | **Accepted** |
 
 **Accepted** decisions represent the current architectural direction.
 
