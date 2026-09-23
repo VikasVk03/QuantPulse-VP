@@ -159,14 +159,21 @@ namespace quantpulse::infrastructure::serialization
 
             previousTimestamp = bar.timestamp;
             hasPreviousTimestamp = true;
-            
-            bar.symbol =
-                requireString(jsonBar, "symbol");
 
-            if (bar.symbol != symbol)
+            if (jsonBar.contains("symbol"))
             {
-                throw std::invalid_argument(
-                    "Market bar symbol does not match request symbol.");
+                bar.symbol =
+                    requireString(jsonBar, "symbol");
+
+                if (bar.symbol != symbol)
+                {
+                    throw std::invalid_argument(
+                        "Market bar symbol does not match request symbol.");
+                }
+            }
+            else
+            {
+                bar.symbol = symbol;
             }
 
             bar.open =

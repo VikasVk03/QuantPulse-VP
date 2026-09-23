@@ -10,9 +10,15 @@ import {
 
 interface HeaderProps {
   onViewLanding?: () => void;
+  activeTab?: string;
+  onSelectTab?: (tab: string) => void;
 }
 
-export function Header({ onViewLanding }: HeaderProps) {
+export function Header({
+  onViewLanding,
+  activeTab = "dashboard",
+  onSelectTab,
+}: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-[#07111f]/95 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between px-4 md:px-6">
@@ -49,22 +55,44 @@ export function Header({ onViewLanding }: HeaderProps) {
           {onViewLanding && (
             <button
               onClick={onViewLanding}
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-white/5 hover:text-foreground transition-colors"
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-white/5 hover:text-foreground transition-colors cursor-pointer"
             >
               <Home className="size-3.5" />
               <span>Landing</span>
             </button>
           )}
 
-          <NavItem active icon={<LayoutDashboard />}>
+          <NavItem
+            active={activeTab === "dashboard"}
+            onClick={() => onSelectTab?.("dashboard")}
+            icon={<LayoutDashboard />}
+          >
             Dashboard
           </NavItem>
 
-          <NavItem icon={<BarChart3 />}>Analytics</NavItem>
+          <NavItem
+            active={activeTab === "data-lab"}
+            onClick={() => onSelectTab?.("data-lab")}
+            icon={<FlaskConical />}
+          >
+            Data Lab
+          </NavItem>
 
-          <NavItem icon={<LineChart />}>Backtest</NavItem>
+          <NavItem
+            active={activeTab === "analytics"}
+            onClick={() => onSelectTab?.("analytics")}
+            icon={<BarChart3 />}
+          >
+            Analytics
+          </NavItem>
 
-          <NavItem icon={<FlaskConical />}>Research</NavItem>
+          <NavItem
+            active={activeTab === "backtest"}
+            onClick={() => onSelectTab?.("backtest")}
+            icon={<LineChart />}
+          >
+            Backtest
+          </NavItem>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -101,14 +129,16 @@ interface NavItemProps {
   children: React.ReactNode;
   icon: React.ReactNode;
   active?: boolean;
+  onClick?: () => void;
 }
 
-function NavItem({ children, icon, active }: NavItemProps) {
+function NavItem({ children, icon, active, onClick }: NavItemProps) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className={[
-        "flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium transition-colors",
+        "flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium transition-colors cursor-pointer",
         active
           ? "bg-primary/10 text-primary"
           : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
