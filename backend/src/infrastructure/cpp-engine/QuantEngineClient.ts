@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 
 import { config } from "../../config/env.js";
+import { logger } from "../../shared/logger/logger.js";
 
 import type {
   MarketBar,
@@ -138,6 +139,9 @@ export function runMarketAnalysis(
     })),
   };
 
+  const startTime = Date.now();
+  logger.cppRequest("analyze-json", { symbol: request.symbol, barCount: request.bars.length });
+
   return new Promise((resolve, reject) => {
     const child = spawn(
       config.cppEnginePath,
@@ -156,18 +160,17 @@ export function runMarketAnalysis(
     });
 
     child.on("error", (error) => {
+      const duration = Date.now() - startTime;
+      logger.cppError("analyze-json", error, duration);
       reject(error);
     });
 
     child.on("close", (code) => {
+      const duration = Date.now() - startTime;
       if (code !== 0) {
-        reject(
-          new Error(
-            stderr.trim() ||
-            `C++ engine exited with code ${code}`,
-          ),
-        );
-
+        const errMsg = stderr.trim() || `C++ engine exited with code ${code}`;
+        logger.cppError("analyze-json", errMsg, duration);
+        reject(new Error(errMsg));
         return;
       }
 
@@ -176,10 +179,16 @@ export function runMarketAnalysis(
           stdout.trim(),
         ) as unknown;
 
-        resolve(
-          validateMarketAnalyticsResult(parsed),
-        );
+        const validated = validateMarketAnalyticsResult(parsed);
+        logger.cppResponse("analyze-json", duration, {
+          symbol: validated.symbol,
+          bytesReceived: stdout.length,
+          observationCount: validated.observationCount,
+        });
+
+        resolve(validated);
       } catch (error) {
+        logger.cppError("analyze-json", error, duration);
         reject(
           new Error(
             `Failed to parse C++ engine response: ${error instanceof Error

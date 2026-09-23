@@ -1,6 +1,5 @@
+import { api } from "../../lib/apiClient";
 import type { DatasetListItem, MarketAnalysisResponse } from "./market.types";
-
-const API_BASE_URL = "http://localhost:8000";
 
 const DEFAULT_SAMPLE_FILE = "../data/samples/reliance-market-bar-v1.csv";
 
@@ -9,11 +8,7 @@ const DEFAULT_SAMPLE_FILE = "../data/samples/reliance-market-bar-v1.csv";
  */
 export async function fetchDatasets(): Promise<DatasetListItem[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/datasets`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch datasets: ${response.status}`);
-    }
-    const result = await response.json();
+    const result = await api.datasets.list();
     return result.success ? result.data : [];
   } catch (error) {
     console.warn("Could not fetch datasets from backend:", error);
@@ -27,23 +22,13 @@ export async function fetchDatasets(): Promise<DatasetListItem[]> {
 export async function fetchDatasetAnalytics(
   datasetId: string,
 ): Promise<MarketAnalysisResponse> {
-  const url = `${API_BASE_URL}/api/analytics/datasets/${encodeURIComponent(datasetId)}`;
-  const response = await fetch(url);
+  const result = await api.analytics.getDatasetAnalytics(datasetId);
 
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new Error(
-      errorBody.error ||
-        `Analytics request failed with status ${response.status}`,
-    );
+  if (!result || !result.success) {
+    throw new Error(result?.error || "Market analysis failed.");
   }
 
-  const result = (await response.json()) as MarketAnalysisResponse;
-  if (!result.success) {
-    throw new Error("Market analysis failed.");
-  }
-
-  return result;
+  return result as MarketAnalysisResponse;
 }
 
 /**
@@ -52,21 +37,13 @@ export async function fetchDatasetAnalytics(
 export async function fetchMarketAnalysis(
   filePath: string = DEFAULT_SAMPLE_FILE,
 ): Promise<MarketAnalysisResponse> {
-  const url =
-    `${API_BASE_URL}/api/market/analyze` +
-    `?file=${encodeURIComponent(filePath)}`;
+  const result = await api.get(
+    `/api/market/analyze?file=${encodeURIComponent(filePath)}`,
+  );
 
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Market API request failed: ${response.status}`);
+  if (!result || !result.success) {
+    throw new Error(result?.error || "Market analysis failed.");
   }
 
-  const result = (await response.json()) as MarketAnalysisResponse;
-
-  if (!result.success) {
-    throw new Error("Market analysis failed.");
-  }
-
-  return result;
+  return result as MarketAnalysisResponse;
 }

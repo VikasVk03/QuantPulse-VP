@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { DatasetRepository } from "../../infrastructure/database/repositories/DatasetRepository.js";
 import type { MarketDataRepository } from "../../infrastructure/database/repositories/MarketDataRepository.js";
 import { AppError } from "../../shared/errors/AppError.js";
+import { logger } from "../../shared/logger/logger.js";
 import type {
   DataPipelineResult,
   PipelineStageResult,
@@ -54,11 +55,15 @@ export class DataPipelineService {
 
     let currentStageName: PipelineStageResult["name"] = "ingestion";
 
+    logger.info("ETL:START", `Starting pipeline ${pipelineId} for file "${payload.fileName}"`);
+
     try {
       // 1. Ingestion & Schema Detection
       updateStage("ingestion", { status: "running", startedAt: new Date() });
       const parsedData = runIngestionStage(payload);
       const totalRows = parsedData.records.length;
+
+      logger.info("ETL:INGEST", `Parsed ${totalRows} records from ${payload.fileName} (format: ${parsedData.format}, inferredSymbol: ${parsedData.inferredSymbol})`);
 
       updateStage("ingestion", {
         status: "completed",
@@ -171,6 +176,8 @@ export class DataPipelineService {
         outputRows: persistenceResult.insertedCount,
       });
 
+      logger.info("ETL:SUCCESS", `Pipeline ${pipelineId} completed: saved ${persistenceResult.insertedCount} bars for dataset "${persistenceResult.dataset.name}" (ID: ${persistenceResult.dataset.id})`);
+
       const finalResult: DataPipelineResult = {
         pipelineId,
         datasetId: persistenceResult.dataset.id,
@@ -185,7 +192,7 @@ export class DataPipelineService {
         stages,
         warnings,
         errors,
-        preview: persistenceResult.persistedBars.slice(0, 10),
+        preview: persistenceResult.persistedBars,
         createdAt,
         completedAt: new Date(),
       };
@@ -194,6 +201,7 @@ export class DataPipelineService {
       return finalResult;
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
+      logger.error("ETL:ERROR", `Pipeline ${pipelineId} failed at stage [${currentStageName}]: ${errorMsg}`, error);
 
       errors.push(errorMsg);
       updateStage(currentStageName, {

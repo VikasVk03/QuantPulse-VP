@@ -216,8 +216,8 @@ export function MarketDashboard({
 
         {/* Controls */}
         <Card className="border-primary/30 bg-[#071426]/80 shadow-none">
-          <CardContent className="p-3">
-            <div className="grid gap-3 md:grid-cols-[1.5fr_120px_140px_1fr]">
+          <CardContent className="p-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[2fr_140px_160px_1fr] items-end">
               <ControlBlock label="Active Dataset / Instrument">
                 <Select
                   value={
@@ -226,11 +226,11 @@ export function MarketDashboard({
                   }
                   onValueChange={handleDatasetChange}
                 >
-                  <SelectTrigger className="h-9 border-border/70 bg-[#091827]">
+                  <SelectTrigger className="h-9 border-slate-700/80 bg-[#091827] text-slate-200">
                     <SelectValue placeholder="Select dataset" />
                   </SelectTrigger>
 
-                  <SelectContent>
+                  <SelectContent className="min-w-[280px]">
                     {datasets.map((ds) => (
                       <SelectItem key={ds.id} value={ds.id}>
                         {ds.symbol} — {ds.name} ({ds.barCount || "?"} bars)
@@ -245,7 +245,7 @@ export function MarketDashboard({
 
               <ControlBlock label="Timeframe">
                 <Select defaultValue={activeDataset?.timeframe || "1d"}>
-                  <SelectTrigger className="h-9 border-border/70 bg-[#091827]">
+                  <SelectTrigger className="h-9 border-slate-700/80 bg-[#091827] text-slate-200">
                     <SelectValue />
                   </SelectTrigger>
 
@@ -260,20 +260,19 @@ export function MarketDashboard({
               </ControlBlock>
 
               <ControlBlock label="Engine Backend">
-                <div className="flex h-9 items-center rounded-md border border-border/70 bg-[#091827] px-3 text-xs font-medium text-emerald-400">
-                  <span className="size-1.5 rounded-full bg-emerald-400 mr-2" />
-                  C++20 Native
+                <div className="flex h-9 items-center rounded-lg border border-slate-700/80 bg-[#091827] px-3 text-xs font-medium text-emerald-400">
+                  <span className="size-1.5 rounded-full bg-emerald-400 mr-2 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                  C++20 Native Engine
                 </div>
               </ControlBlock>
 
-              <div className="hidden items-center justify-end gap-3 pr-2 text-xs text-muted-foreground md:flex">
+              <div className="hidden items-center justify-end gap-3 pr-2 pb-2 text-xs text-muted-foreground lg:flex">
                 <span>
                   {data?.observationCount
-                    ? `${data.observationCount} OHLCV bars`
+                    ? `${data.observationCount.toLocaleString()} bars`
                     : "Market Bars"}
                 </span>
                 <span className="size-1 rounded-full bg-border" />
-                <span>C++ Analytics</span>
               </div>
             </div>
           </CardContent>
@@ -569,8 +568,8 @@ function ControlBlock({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <div className="mb-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+    <div className="w-full space-y-1.5">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
         {label}
       </div>
 

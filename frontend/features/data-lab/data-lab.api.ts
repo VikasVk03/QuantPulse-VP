@@ -1,13 +1,9 @@
+import { api } from "../../lib/apiClient";
 import type {
   PipelineResult,
   UploadDatasetApiResponse,
   UploadDatasetRequest,
 } from "./data-lab.types";
-
-const API_BASE_URL =
-  typeof window !== "undefined" && window.location.port === "5173"
-    ? "http://localhost:8000"
-    : "";
 
 export async function uploadDataset(
   request: UploadDatasetRequest,
@@ -21,17 +17,12 @@ export async function uploadDataset(
   if (request.source) formData.append("source", request.source);
   if (request.description) formData.append("description", request.description);
 
-  const response = await fetch(`${API_BASE_URL}/api/data-pipeline/upload`, {
-    method: "POST",
-    body: formData,
-  });
+  const result = (await api.dataLab.upload(
+    formData,
+  )) as UploadDatasetApiResponse;
 
-  const result = (await response.json()) as UploadDatasetApiResponse;
-
-  if (!response.ok || !result.success) {
-    throw new Error(
-      result.error || `Upload failed with status code ${response.status}`,
-    );
+  if (!result || !result.success) {
+    throw new Error(result?.error || "Upload failed");
   }
 
   return result.data;
@@ -40,15 +31,13 @@ export async function uploadDataset(
 export async function getPipelineStatus(
   pipelineId: string,
 ): Promise<PipelineResult> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/data-pipeline/${encodeURIComponent(pipelineId)}`,
-  );
+  const result = (await api.dataLab.getStatus(
+    pipelineId,
+  )) as UploadDatasetApiResponse;
 
-  const result = (await response.json()) as UploadDatasetApiResponse;
-
-  if (!response.ok || !result.success) {
+  if (!result || !result.success) {
     throw new Error(
-      result.error || `Failed to fetch pipeline status (${response.status})`,
+      result?.error || `Failed to fetch pipeline status for ${pipelineId}`,
     );
   }
 
@@ -58,15 +47,13 @@ export async function getPipelineStatus(
 export async function getPipelineResult(
   pipelineId: string,
 ): Promise<PipelineResult> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/data-pipeline/${encodeURIComponent(pipelineId)}/result`,
-  );
+  const result = (await api.dataLab.getResult(
+    pipelineId,
+  )) as UploadDatasetApiResponse;
 
-  const result = (await response.json()) as UploadDatasetApiResponse;
-
-  if (!response.ok || !result.success) {
+  if (!result || !result.success) {
     throw new Error(
-      result.error || `Failed to fetch pipeline result (${response.status})`,
+      result?.error || `Failed to fetch pipeline result for ${pipelineId}`,
     );
   }
 
