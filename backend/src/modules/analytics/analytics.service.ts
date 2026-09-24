@@ -1,93 +1,66 @@
 import type { Analytics } from "./analytics.types.js";
+import { AppError } from "../../shared/errors/AppError.js";
 
-import type {
-    AnalyticsRepository,
-    CreateAnalyticsInput,
-} from "../../infrastructure/database/repositories/AnalyticsRepository.js";
+import type { AnalyticsRepository } from "../../infrastructure/database/repositories/AnalyticsRepository.js";
 
 import type { DatasetRepository } from "../../infrastructure/database/repositories/DatasetRepository.js";
 
 import type { MarketDataRepository } from "../../infrastructure/database/repositories/MarketDataRepository.js";
 
 import {
-    runMarketAnalysis,
+  runMarketAnalysis,
+  type MarketAnalyticsResult,
 } from "../../infrastructure/cpp-engine/QuantEngineClient.js";
 
 export class AnalyticsService {
-    constructor(
-        private readonly analyticsRepository: AnalyticsRepository,
-        private readonly datasetRepository: DatasetRepository,
-        private readonly marketDataRepository: MarketDataRepository,
-    ) { }
+  constructor(
+    private readonly marketDataRepository: MarketDataRepository,
+    private readonly datasetRepository: DatasetRepository,
+    private readonly analyticsRepository?: AnalyticsRepository,
+  ) {}
 
-    async analyzeMarket(
-        datasetId: string,
-    ): Promise<Analytics> {
-        const dataset =
-            await this.datasetRepository.findById(datasetId);
+  async analyzeDataset(datasetId: string): Promise<MarketAnalyticsResult> {
+    const dataset = await this.datasetRepository.findById(datasetId);
 
-        if (!dataset) {
-            throw new Error("Dataset not found.");
-        }
-
-        const bars =
-            await this.marketDataRepository.getBars({
-                datasetId: dataset.id,
-                symbol: dataset.symbol,
-            });
-
-        if (bars.length === 0) {
-            throw new Error(
-                "Dataset contains no market data.",
-            );
-        }
-
-        const result =
-            await runMarketAnalysis(
-                dataset.symbol,
-                bars,
-            );
-
-        const input: CreateAnalyticsInput = {
-            datasetId: dataset.id,
-            symbol: result.symbol,
-            timeframe: dataset.timeframe,
-
-            observationCount: result.observationCount,
-            firstPrice: result.firstPrice,
-            lastPrice: result.lastPrice,
-            totalVolume: result.totalVolume,
-            averageVolume: result.averageVolume,
-            returnPercentage: result.returnPercentage,
-            volatility: result.volatility,
-
-            series: result.series,
-        };
-
-        return this.analyticsRepository.create(input);
+    if (!dataset) {
+      throw new AppError(404, "Dataset not found");
     }
 
-    async getAll(): Promise<Analytics[]> {
-        return this.analyticsRepository.getAll();
+    const bars = await this.marketDataRepository.getBars({
+      datasetId: dataset.id,
+      symbol: dataset.symbol,
+    });
+
+    if (bars.length === 0) {
+      throw new AppError(400, "Dataset contains no market data.");
     }
 
-    async getById(
-        id: string,
-    ): Promise<Analytics | null> {
-        return this.analyticsRepository.getById(id);
-    }
+    return runMarketAnalysis(dataset.symbol, bars);
+  }
 
-    async getByDatasetId(
-        datasetId: string,
-    ): Promise<Analytics[]> {
-        return this.analyticsRepository.getByDatasetId(
-            datasetId,
-        );
-    }
+  async analyzeMarket(datasetId: string): Promise<MarketAnalyticsResult> {
+    return this.analyzeDataset(datasetId);
+  }
 
-    async deleteById(
-        id: string,
-    ): Promise<boolean> {
-        return this.analyticsRepository.deleteById(id);
-    }
+  async getAll(): Promise<Analytics[]> {
+    return this.analyticsRepository ? this.analyticsRepository.getAll() : [];
+  }
+
+  async getById(id: string): Promise<Analytics | null> {
+    return this.analyticsRepository
+      ? this.analyticsRepository.getById(id)
+      : null;
+  }
+
+  async getByDatasetId(datasetId: string): Promise<Analytics[]> {
+    return this.analyticsRepository
+      ? this.analyticsRepository.getByDatasetId(datasetId)
+      : [];
+  }
+
+  async deleteById(id: string): Promise<boolean> {
+    return this.analyticsRepository
+      ? this.analyticsRepository.deleteById(id)
+      : false;
+  }
 }

@@ -1,25 +1,49 @@
-import type { MarketAnalysisResponse } from "./market.types";
+import { api } from "../../lib/apiClient";
+import type { DatasetListItem, MarketAnalysisResponse } from "./market.types";
 
-const API_BASE_URL = "http://localhost:8000";
+const DEFAULT_SAMPLE_FILE = "../data/samples/reliance-market-bar-v1.csv";
 
-const MARKET_DATA_FILE = "../data/samples/reliance-market-bar-v1.csv";
+/**
+ * Fetch all available datasets from MongoDB
+ */
+export async function fetchDatasets(): Promise<DatasetListItem[]> {
+  try {
+    const result = await api.datasets.list();
+    return result.success ? result.data : [];
+  } catch (error) {
+    console.warn("Could not fetch datasets from backend:", error);
+    return [];
+  }
+}
 
-export async function fetchMarketAnalysis(): Promise<MarketAnalysisResponse> {
-  const url =
-    `${API_BASE_URL}/api/market/analyze` +
-    `?file=${encodeURIComponent(MARKET_DATA_FILE)}`;
+/**
+ * Run C++ quantitative analysis on a specific persisted dataset
+ */
+export async function fetchDatasetAnalytics(
+  datasetId: string,
+): Promise<MarketAnalysisResponse> {
+  const result = await api.analytics.getDatasetAnalytics(datasetId);
 
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Market API request failed: ${response.status}`);
+  if (!result || !result.success) {
+    throw new Error(result?.error || "Market analysis failed.");
   }
 
-  const result = (await response.json()) as MarketAnalysisResponse;
+  return result as MarketAnalysisResponse;
+}
 
-  if (!result.success) {
-    throw new Error("Market analysis failed.");
+/**
+ * Fallback to legacy file-based market analysis if needed
+ */
+export async function fetchMarketAnalysis(
+  filePath: string = DEFAULT_SAMPLE_FILE,
+): Promise<MarketAnalysisResponse> {
+  const result = await api.get(
+    `/api/market/analyze?file=${encodeURIComponent(filePath)}`,
+  );
+
+  if (!result || !result.success) {
+    throw new Error(result?.error || "Market analysis failed.");
   }
 
-  return result;
+  return result as MarketAnalysisResponse;
 }

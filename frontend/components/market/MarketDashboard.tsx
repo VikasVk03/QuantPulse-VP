@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Activity,
   BarChart3,
@@ -6,7 +6,10 @@ import {
   ChartNoAxesCombined,
   Database,
   Gauge,
+  Layers,
   Play,
+  Plus,
+  RefreshCw,
   Signal,
   TrendingUp,
 } from "lucide-react";
@@ -23,18 +26,55 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
-import { fetchMarketAnalysis } from "@/features/market/market.api";
-import type { MarketAnalyticsResult } from "@/features/market/market.types";
+import {
+  fetchDatasets,
+  fetchDatasetAnalytics,
+  fetchMarketAnalysis,
+} from "@/features/market/market.api";
+import type {
+  DatasetListItem,
+  MarketAnalyticsResult,
+} from "@/features/market/market.types";
 
 import { MetricCard } from "./MetricCard";
 import { PriceChart } from "./PriceChart";
 
-export function MarketDashboard() {
+interface MarketDashboardProps {
+  initialDatasetId?: string | null;
+  onNavigateToDataLab?: () => void;
+}
+
+export function MarketDashboard({
+  initialDatasetId,
+  onNavigateToDataLab,
+}: MarketDashboardProps) {
+  const [datasets, setDatasets] = useState<DatasetListItem[]>([]);
+  const [selectedDatasetId, setSelectedDatasetId] = useState<string | null>(
+    initialDatasetId ?? null,
+  );
   const [data, setData] = useState<MarketAnalyticsResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleAnalyze() {
+  const loadAnalysisForDataset = useCallback(async (datasetId: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetchDatasetAnalytics(datasetId);
+      setData(response.data);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to load market analysis for dataset.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadSampleAnalysis = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -48,11 +88,52 @@ export function MarketDashboard() {
     } finally {
       setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    void handleAnalyze();
   }, []);
+
+  // Fetch dataset list on mount
+  useEffect(() => {
+    async function init() {
+      const list = await fetchDatasets();
+      setDatasets(list);
+
+      const targetId =
+        initialDatasetId && list.some((d) => d.id === initialDatasetId)
+          ? initialDatasetId
+          : list.length > 0
+            ? list[0]!.id
+            : null;
+
+      if (targetId) {
+        setSelectedDatasetId(targetId);
+        void loadAnalysisForDataset(targetId);
+      } else {
+        setSelectedDatasetId("sample");
+        void loadSampleAnalysis();
+      }
+    }
+
+    void init();
+  }, [initialDatasetId, loadAnalysisForDataset, loadSampleAnalysis]);
+
+  const handleDatasetChange = (value: string | null) => {
+    if (!value) return;
+    setSelectedDatasetId(value);
+    if (value === "sample") {
+      void loadSampleAnalysis();
+    } else {
+      void loadAnalysisForDataset(value);
+    }
+  };
+
+  const handleRefresh = () => {
+    if (selectedDatasetId && selectedDatasetId !== "sample") {
+      void loadAnalysisForDataset(selectedDatasetId);
+    } else {
+      void loadSampleAnalysis();
+    }
+  };
+
+  const activeDataset = datasets.find((d) => d.id === selectedDatasetId);
 
   return (
     <main className="min-h-[calc(100vh-70px)] bg-[#050c16] text-foreground">
@@ -65,7 +146,7 @@ export function MarketDashboard() {
                 variant="outline"
                 className="border-primary/40 bg-primary/10 text-[10px] font-semibold tracking-wider text-primary"
               >
-                MARKET
+                MARKET TERMINAL
               </Badge>
 
               <span className="text-xs text-muted-foreground">
@@ -73,12 +154,18 @@ export function MarketDashboard() {
               </span>
             </div>
 
-            <h1 className="text-3xl font-semibold tracking-tight">
+            <h1 className="text-3xl font-semibold tracking-tight text-white flex items-center gap-3">
               Market Analysis
+              {activeDataset && (
+                <span className="text-xs font-mono font-normal rounded-md bg-sky-500/10 border border-sky-500/20 text-sky-300 px-2.5 py-1">
+                  {activeDataset.symbol} • {activeDataset.name}
+                </span>
+              )}
             </h1>
 
             <p className="mt-1 text-sm text-muted-foreground">
-              Historical market intelligence powered by the C++20 quant engine.
+              Quantitative market intelligence and risk analytics powered by the
+              C++20 engine.
             </p>
           </div>
 
@@ -88,72 +175,104 @@ export function MarketDashboard() {
                 <span className="size-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.7)]" />
 
                 <span className="text-xs font-semibold text-emerald-300">
-                  ENGINE READY
+                  C++20 ENGINE READY
                 </span>
               </div>
 
               <div className="mt-0.5 text-[10px] text-muted-foreground">
-                C++20 Analytics Engine
+                {activeDataset
+                  ? `${activeDataset.barCount || data?.observationCount || 0} Bars Loaded`
+                  : "C++20 Analytics Engine"}
               </div>
             </div>
+
+            {onNavigateToDataLab && (
+              <Button
+                variant="outline"
+                size="default"
+                className="gap-2 border-slate-700 bg-slate-800/80 text-slate-200 hover:bg-slate-700 hover:text-white"
+                onClick={onNavigateToDataLab}
+              >
+                <Plus className="size-3.5" />
+                <span>Import Dataset</span>
+              </Button>
+            )}
 
             <Button
               size="default"
               className="gap-2 bg-primary shadow-[0_0_24px_rgba(59,130,246,0.16)]"
-              onClick={() => void handleAnalyze()}
+              onClick={handleRefresh}
               disabled={loading}
             >
-              <Play className="size-3.5 fill-current" />
-
-              {loading ? "Analyzing..." : "Analyze"}
+              {loading ? (
+                <RefreshCw className="size-3.5 animate-spin" />
+              ) : (
+                <Play className="size-3.5 fill-current" />
+              )}
+              {loading ? "Analyzing..." : "Re-Analyze"}
             </Button>
           </div>
         </section>
 
         {/* Controls */}
         <Card className="border-primary/30 bg-[#071426]/80 shadow-none">
-          <CardContent className="p-3">
-            <div className="grid gap-3 md:grid-cols-[1fr_140px_180px_1fr]">
-              <ControlBlock label="Instrument">
-                <Select defaultValue="RELIANCE">
-                  <SelectTrigger className="h-9 border-border/70 bg-[#091827]">
-                    <SelectValue />
+          <CardContent className="p-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[2fr_140px_160px_1fr] items-end">
+              <ControlBlock label="Active Dataset / Instrument">
+                <Select
+                  value={
+                    selectedDatasetId ||
+                    (datasets.length > 0 ? datasets[0]!.id : "sample")
+                  }
+                  onValueChange={handleDatasetChange}
+                >
+                  <SelectTrigger className="h-9 border-slate-700/80 bg-[#091827] text-slate-200">
+                    <SelectValue placeholder="Select dataset" />
                   </SelectTrigger>
 
-                  <SelectContent>
-                    <SelectItem value="RELIANCE">RELIANCE</SelectItem>
+                  <SelectContent className="min-w-[280px]">
+                    {datasets.map((ds) => (
+                      <SelectItem key={ds.id} value={ds.id}>
+                        {ds.symbol} — {ds.name} ({ds.barCount || "?"} bars)
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="sample">
+                      RELIANCE (Built-in Sample)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </ControlBlock>
 
               <ControlBlock label="Timeframe">
-                <Select defaultValue="1m">
-                  <SelectTrigger className="h-9 border-border/70 bg-[#091827]">
+                <Select defaultValue={activeDataset?.timeframe || "1d"}>
+                  <SelectTrigger className="h-9 border-slate-700/80 bg-[#091827] text-slate-200">
                     <SelectValue />
                   </SelectTrigger>
 
                   <SelectContent>
                     <SelectItem value="1m">1m</SelectItem>
+                    <SelectItem value="5m">5m</SelectItem>
+                    <SelectItem value="15m">15m</SelectItem>
+                    <SelectItem value="1h">1h</SelectItem>
+                    <SelectItem value="1d">1d</SelectItem>
                   </SelectContent>
                 </Select>
               </ControlBlock>
 
-              <ControlBlock label="Data source">
-                <Select defaultValue="sample">
-                  <SelectTrigger className="h-9 border-border/70 bg-[#091827]">
-                    <SelectValue />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    <SelectItem value="sample">Sample data</SelectItem>
-                  </SelectContent>
-                </Select>
+              <ControlBlock label="Engine Backend">
+                <div className="flex h-9 items-center rounded-lg border border-slate-700/80 bg-[#091827] px-3 text-xs font-medium text-emerald-400">
+                  <span className="size-1.5 rounded-full bg-emerald-400 mr-2 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                  C++20 Native Engine
+                </div>
               </ControlBlock>
 
-              <div className="hidden items-center justify-end gap-3 pr-2 text-xs text-muted-foreground md:flex">
-                <span>1-minute bars</span>
+              <div className="hidden items-center justify-end gap-3 pr-2 pb-2 text-xs text-muted-foreground lg:flex">
+                <span>
+                  {data?.observationCount
+                    ? `${data.observationCount.toLocaleString()} bars`
+                    : "Market Bars"}
+                </span>
                 <span className="size-1 rounded-full bg-border" />
-                <span>Close + volume</span>
               </div>
             </div>
           </CardContent>
@@ -161,8 +280,18 @@ export function MarketDashboard() {
 
         {error && (
           <Card className="border-destructive/40 bg-destructive/5 shadow-none">
-            <CardContent className="p-4 text-sm text-destructive">
-              {error}
+            <CardContent className="p-4 text-sm text-destructive flex items-center justify-between">
+              <span>{error}</span>
+              {onNavigateToDataLab && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onNavigateToDataLab}
+                  className="text-xs"
+                >
+                  Go to Data Lab
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}
@@ -216,11 +345,12 @@ export function MarketDashboard() {
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <CardTitle className="text-base uppercase tracking-wide">
-                        Price
+                        Price & Volume
                       </CardTitle>
 
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Historical closing price and traded volume.
+                        Historical closing price and traded volume computed via
+                        C++20 engine.
                       </p>
                     </div>
 
@@ -241,7 +371,7 @@ export function MarketDashboard() {
                 </CardContent>
               </Card>
 
-              <MarketSummary data={data} />
+              <MarketSummary data={data} datasetName={activeDataset?.name} />
             </section>
 
             {/* Intelligence layer */}
@@ -257,11 +387,22 @@ export function MarketDashboard() {
   );
 }
 
-function MarketSummary({ data }: { data: MarketAnalyticsResult }) {
+function MarketSummary({
+  data,
+  datasetName,
+}: {
+  data: MarketAnalyticsResult;
+  datasetName?: string;
+}) {
   return (
     <Card className="border-primary/25 bg-[#071426]/75 shadow-none">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Market summary</CardTitle>
+        <CardTitle className="text-base">Market Summary</CardTitle>
+        {datasetName && (
+          <p className="text-xs text-muted-foreground font-mono truncate">
+            {datasetName}
+          </p>
+        )}
       </CardHeader>
 
       <CardContent className="space-y-3">
@@ -306,18 +447,18 @@ function MarketSummary({ data }: { data: MarketAnalyticsResult }) {
 
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
-                Engine status
+                Engine Status
               </div>
 
-              <div className="mt-1 flex items-center gap-2 text-xs font-medium">
+              <div className="mt-1 flex items-center gap-2 text-xs font-medium text-emerald-400">
                 <span className="size-1.5 rounded-full bg-emerald-400" />
-                Analysis complete
+                C++20 Analysis Complete
               </div>
             </div>
           </div>
 
           <p className="mt-2 text-[11px] text-muted-foreground">
-            C++20 market analytics
+            Market analytics calculated natively in C++
           </p>
         </div>
       </CardContent>
@@ -331,7 +472,7 @@ function MicrostructurePanel() {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm uppercase tracking-[0.08em]">
-            Market microstructure
+            Market Microstructure
           </CardTitle>
 
           <ChartNoAxesCombined className="size-5 text-primary/70" />
@@ -362,7 +503,7 @@ function SignalsPanel() {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm uppercase tracking-[0.08em]">
-            Recent signals
+            Recent Signals
           </CardTitle>
 
           <Signal className="size-5 text-primary/70" />
@@ -373,10 +514,10 @@ function SignalsPanel() {
         <div className="text-center">
           <BrainCircuit className="mx-auto size-8 text-muted-foreground/50" />
 
-          <div className="mt-3 text-sm font-medium">No signals available</div>
+          <div className="mt-3 text-sm font-medium">No active signals</div>
 
           <p className="mt-1 text-xs text-muted-foreground">
-            Signal generation will be connected to the quant engine.
+            Signal generation module ready for strategy execution.
           </p>
         </div>
       </CardContent>
@@ -427,8 +568,8 @@ function ControlBlock({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <div className="mb-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+    <div className="w-full space-y-1.5">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
         {label}
       </div>
 

@@ -3,14 +3,16 @@ import type {
 } from "express";
 
 import { AppError } from "./AppError.js";
+import { logger } from "../logger/logger.js";
 
 export const errorHandler: ErrorRequestHandler = (
     error,
-    _req,
+    req,
     res,
     _next,
 ): void => {
     if (error instanceof AppError) {
+        logger.warn("HTTP:ERROR", `[${error.statusCode}] ${req.method} ${req.path} - ${error.message}`);
         res.status(error.statusCode).json({
             success: false,
             error: error.message,
@@ -19,7 +21,7 @@ export const errorHandler: ErrorRequestHandler = (
         return;
     }
 
-    console.error("Unhandled application error:", error);
+    logger.error("HTTP:UNHANDLED", `[500] ${req.method} ${req.path} - ${error instanceof Error ? error.message : String(error)}`, error);
 
     res.status(500).json({
         success: false,

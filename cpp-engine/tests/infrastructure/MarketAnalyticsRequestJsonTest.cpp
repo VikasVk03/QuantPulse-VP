@@ -178,3 +178,33 @@ TEST(MarketAnalyticsRequestJsonTest, RejectsNonIncreasingTimestamps)
         MarketAnalyticsRequestJson::parse(json),
         std::invalid_argument);
 }
+
+TEST(MarketAnalyticsRequestJsonTest, ParsesValidRequestWithoutSymbolInBars)
+{
+    const std::string json = R"({
+        "symbol": "RELIANCE",
+        "bars": [
+            {
+                "timestamp": 1785748500000,
+                "open": 1398.2,
+                "high": 1400.1,
+                "low": 1397.8,
+                "close": 1399.5,
+                "volume": 125000.0
+            }
+        ]
+    })";
+
+    const auto request =
+        MarketAnalyticsRequestJson::parse(json);
+
+    EXPECT_EQ(request.symbol, "RELIANCE");
+    ASSERT_EQ(request.bars.size(), 1);
+    EXPECT_EQ(request.bars[0].symbol, "RELIANCE");
+    EXPECT_EQ(request.bars[0].timestamp, 1785748500000);
+    EXPECT_DOUBLE_EQ(request.bars[0].open, 1398.2);
+    EXPECT_DOUBLE_EQ(request.bars[0].high, 1400.1);
+    EXPECT_DOUBLE_EQ(request.bars[0].low, 1397.8);
+    EXPECT_DOUBLE_EQ(request.bars[0].close, 1399.5);
+    EXPECT_DOUBLE_EQ(request.bars[0].volume, 125000.0);
+}
