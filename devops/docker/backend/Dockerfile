@@ -6,7 +6,7 @@
 # ------------------------------------------------------------------------------
 # Stage 1: Build Native C++ Engine Binaries (quantpulse_cli + quantpulse_server)
 # ------------------------------------------------------------------------------
-FROM ubuntu:24.04 AS cpp-builder
+FROM debian:bookworm-slim AS cpp-builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 
