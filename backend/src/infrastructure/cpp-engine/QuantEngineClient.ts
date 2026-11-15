@@ -523,12 +523,13 @@ export async function runMarketAnalysis(
       });
 
       const validated = validateMarketAnalyticsResult(response.data);
+      const enriched = enrichMarketAnalytics(validated, bars);
       const duration = Date.now() - startTime;
       logger.cppResponse("HTTP:analyze", duration, {
-        symbol: validated.symbol,
-        observationCount: validated.observationCount,
+        symbol: enriched.symbol,
+        observationCount: enriched.observationCount,
       });
-      return validated;
+      return enriched;
     } catch (error) {
       const duration = Date.now() - startTime;
       logger.cppError("HTTP:analyze", error, duration);

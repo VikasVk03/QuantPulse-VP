@@ -134,8 +134,14 @@ export const api = {
 
   // Market Analytics Domain
   analytics: {
-    getDatasetAnalytics: (datasetId: string) =>
-      api.get(`/api/analytics/datasets/${encodeURIComponent(datasetId)}`),
+    getDatasetAnalytics: (datasetId: string, symbol?: string) =>
+      api.get(
+        `/api/analytics/datasets/${encodeURIComponent(datasetId)}${
+          symbol ? `?symbol=${encodeURIComponent(symbol)}` : ""
+        }`,
+      ),
+    getSymbolAnalytics: (symbol: string) =>
+      api.get(`/api/analytics/symbol/${encodeURIComponent(symbol)}`),
     analyzeBars: (payload: { symbol: string; bars: any[] }) =>
       api.post("/api/analytics/bars", payload),
   },

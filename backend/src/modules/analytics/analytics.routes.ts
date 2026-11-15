@@ -23,6 +23,7 @@ export const createAnalyticsRoutes = (): Router => {
   const controller = new AnalyticsController(service);
 
   router.get("/datasets/:datasetId", controller.analyzeDataset);
+  router.get("/symbol/:symbol", controller.analyzeSymbol);
   router.post("/bars", controller.analyzeBars);
 
   return router;

@@ -12,9 +12,10 @@ import type { MarketSeriesPoint } from "@/features/market/market.types";
 
 interface PriceChartProps {
   series: MarketSeriesPoint[];
+  height?: number;
 }
 
-export function PriceChart({ series }: PriceChartProps) {
+export function PriceChart({ series, height = 340 }: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
 
@@ -27,7 +28,7 @@ export function PriceChart({ series }: PriceChartProps) {
 
     const chart = createChart(container, {
       width: container.clientWidth,
-      height: 420,
+      height: height,
 
       layout: {
         background: {
@@ -124,15 +125,19 @@ export function PriceChart({ series }: PriceChartProps) {
 
     priceSeries.setData(
       series.map((point) => ({
-        time: point.timestamp as Time,
-        value: point.price,
+        time: (point.timestamp > 1e11
+          ? Math.floor(point.timestamp / 1000)
+          : point.timestamp) as Time,
+        value: point.price !== undefined ? point.price : (point.close ?? 0),
       })),
     );
 
     volumeSeries.setData(
       series.map((point) => ({
-        time: point.timestamp as Time,
-        value: point.volume,
+        time: (point.timestamp > 1e11
+          ? Math.floor(point.timestamp / 1000)
+          : point.timestamp) as Time,
+        value: point.volume || 0,
       })),
     );
 
@@ -141,6 +146,7 @@ export function PriceChart({ series }: PriceChartProps) {
     const resizeObserver = new ResizeObserver(() => {
       chart.applyOptions({
         width: container.clientWidth,
+        height: height,
       });
     });
 
@@ -151,12 +157,13 @@ export function PriceChart({ series }: PriceChartProps) {
       chart.remove();
       chartRef.current = null;
     };
-  }, [series]);
+  }, [series, height]);
 
   return (
     <div
       ref={containerRef}
-      className="h-[105] w-full overflow-hidden rounded-md border border-border/50 bg-[#0f1b2d]"
+      style={{ height: `${height}px` }}
+      className="w-full overflow-hidden rounded-md border border-border/50 bg-[#0f1b2d]"
     />
   );
 }

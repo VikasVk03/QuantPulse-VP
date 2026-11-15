@@ -16,6 +16,10 @@ export class AnalyticsController {
 
   analyzeDataset = async (req: Request, res: Response): Promise<void> => {
     const datasetId = getRouteParam(req.params.datasetId);
+    const symbol =
+      typeof req.query.symbol === "string" && req.query.symbol.trim().length > 0
+        ? req.query.symbol.trim()
+        : undefined;
 
     if (!datasetId) {
       res.status(400).json({
@@ -27,7 +31,9 @@ export class AnalyticsController {
     }
 
     try {
-      const data = await this.service.analyzeDataset(datasetId);
+      const data = symbol
+        ? await this.service.analyzeDataset(datasetId, symbol)
+        : await this.service.analyzeDataset(datasetId);
 
       res.status(200).json({
         success: true,
@@ -71,6 +77,39 @@ export class AnalyticsController {
       }
 
       throw error;
+    }
+  };
+
+  analyzeSymbol = async (req: Request, res: Response): Promise<void> => {
+    const symbol = getRouteParam(req.params.symbol);
+
+    if (!symbol) {
+      res.status(400).json({
+        success: false,
+        error: "Symbol parameter is required",
+      });
+      return;
+    }
+
+    try {
+      const data = await this.service.analyzeSymbol(symbol);
+      res.status(200).json({
+        success: true,
+        data,
+      });
+    } catch (error) {
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: error.message,
+        });
+        return;
+      }
+
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to analyze symbol",
+      });
     }
   };
 

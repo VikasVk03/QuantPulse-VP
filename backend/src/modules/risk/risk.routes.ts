@@ -5,5 +5,6 @@ export const createRiskRoutes = (controller = new RiskController()): Router => {
   const router = Router();
   router.get("/", controller.getSummary);
   router.get("/summary", controller.getSummary);
+  router.get("/surface", controller.getSummary);
   return router;
 };
