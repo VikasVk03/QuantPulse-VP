@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import {
   Activity,
+  AlertCircle,
+  AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
   BarChart3,
+  Bell,
   Bot,
   BrainCircuit,
   CheckCircle2,
@@ -16,6 +19,7 @@ import {
   Flame,
   Layers,
   LineChart,
+  Plus,
   Radio,
   RefreshCw,
   Search,
@@ -26,6 +30,7 @@ import {
   Target,
   TrendingDown,
   TrendingUp,
+  X,
   Zap,
 } from "lucide-react";
 import { PriceChart } from "../../components/market/PriceChart";
@@ -73,6 +78,12 @@ export function MarketOverviewDashboard({
     useState<MarketSeriesPoint[]>(SAMPLE_CHART_SERIES);
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [chartLoading, setChartLoading] = useState<boolean>(false);
+
+  // Watchlist & Alert System States
+  const [watchlist, setWatchlist] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [newSymbolInput, setNewSymbolInput] = useState<string>("");
+  const [showAddSymbol, setShowAddSymbol] = useState<boolean>(false);
 
   // Hook into live real-time SSE stream
   const { quotes, isConnected, activeProvider } = useRealTimeMarketStream({
@@ -125,13 +136,15 @@ export function MarketOverviewDashboard({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statusJson, sigJson, secJson, telJson, dataJson] =
+        const [statusJson, sigJson, secJson, telJson, dataJson, watchJson, alertJson] =
           await Promise.all([
             api.overview.getMarketStatus(),
             api.overview.getSignals(),
             api.overview.getSectors(),
             api.overview.getTelemetry(),
             api.datasets.list(),
+            api.watchlist.get(),
+            api.alerts.get(),
           ]);
 
         if (statusJson.success) setIndices(statusJson.data.indices);
@@ -141,12 +154,53 @@ export function MarketOverviewDashboard({
         if (dataJson.success && Array.isArray(dataJson.data)) {
           setAvailableDatasets(dataJson.data);
         }
+        if (watchJson?.success && Array.isArray(watchJson.data)) {
+          setWatchlist(watchJson.data);
+        }
+        if (alertJson?.success && Array.isArray(alertJson.data)) {
+          setAlerts(alertJson.data);
+        }
       } catch {}
       setIsLoading(false);
     };
 
     fetchData();
   }, []);
+
+  const handleAddWatchlist = async () => {
+    if (!newSymbolInput.trim()) return;
+    const sym = newSymbolInput.trim().toUpperCase();
+    try {
+      const res = await api.watchlist.add({ symbol: sym });
+      if (res?.success && res.data) {
+        setWatchlist((prev) => [...prev.filter((p) => p.symbol !== res.data.symbol), res.data]);
+        setSelectedSymbol(res.data.symbol);
+        setNewSymbolInput("");
+        setShowAddSymbol(false);
+      }
+    } catch (err) {
+      console.error("Failed to add to watchlist:", err);
+    }
+  };
+
+  const handleRemoveWatchlist = async (sym: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await api.watchlist.remove(sym);
+      setWatchlist((prev) => prev.filter((p) => p.symbol !== sym));
+    } catch (err) {
+      console.error("Failed to remove from watchlist:", err);
+    }
+  };
+
+  const handleDismissAlert = async (id: string) => {
+    try {
+      await api.alerts.dismiss(id);
+      setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, status: "MUTED" } : a)));
+    } catch (err) {
+      console.error("Failed to dismiss alert:", err);
+    }
+  };
 
   const topGainers = [
     { symbol: "ONGC", price: 312.4, change: 3.21 },
@@ -292,6 +346,166 @@ export function MarketOverviewDashboard({
             />
           );
         })}
+      </div>
+
+      {/* Real-Time Quant Alert Trigger Notification */}
+      {alerts.filter((a) => a.status === "TRIGGERED").length > 0 && (
+        <div className="space-y-2">
+          {alerts
+            .filter((a) => a.status === "TRIGGERED")
+            .map((alert) => (
+              <div
+                key={alert.id}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 backdrop-blur-xl shadow-lg shadow-amber-500/5 animate-pulse"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300">
+                    <Bell className="size-4 animate-bounce" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-amber-300">
+                        ⚡ QUANT ALERT TRIGGERED • {alert.symbol}
+                      </span>
+                      <span className="text-[10px] font-mono rounded bg-amber-500/20 px-1.5 py-0.2 text-amber-200">
+                        {alert.condition}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-200 mt-0.5">{alert.message}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-end sm:self-center font-mono">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSymbol(alert.symbol)}
+                    className="rounded-lg bg-amber-500/20 border border-amber-500/40 px-2.5 py-1 text-xs font-bold text-amber-200 hover:bg-amber-500/30 transition-all cursor-pointer"
+                  >
+                    View Chart
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDismissAlert(alert.id)}
+                    className="flex size-7 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all cursor-pointer"
+                    title="Dismiss Alert"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+        </div>
+      )}
+
+      {/* Persistent User Watchlist Bar */}
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3.5 backdrop-blur-xl shadow-xl flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+          <Star className="size-3.5 text-amber-400 fill-amber-400/20" />
+          <span>Active Watchlist</span>
+          <span className="text-[10px] font-mono rounded-full bg-slate-800 px-2 py-0.2 text-slate-400">
+            {watchlist.length} Tickers
+          </span>
+        </div>
+
+        {/* Watchlist Symbol Pills */}
+        <div className="flex flex-wrap items-center gap-2 flex-1">
+          {watchlist.map((item) => {
+            const isSelected = selectedSymbol.toUpperCase() === item.symbol.toUpperCase();
+            const liveQ = quotes[item.symbol];
+            const price = liveQ?.price ?? item.lastPrice;
+            const changePct = liveQ?.changePercent ?? item.changePct;
+            const isPos = changePct >= 0;
+
+            return (
+              <div
+                key={item.symbol}
+                onClick={() => setSelectedSymbol(item.symbol)}
+                className={`group flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-mono transition-all cursor-pointer border ${
+                  isSelected
+                    ? "bg-sky-500/15 border-sky-400 text-white shadow-md shadow-sky-500/10 scale-[1.02]"
+                    : "bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900"
+                }`}
+              >
+                <div className="flex items-center gap-1.5 font-bold">
+                  {isSelected && (
+                    <span className="size-1.5 rounded-full bg-sky-400 animate-pulse" />
+                  )}
+                  <span>{item.symbol}</span>
+                </div>
+
+                <div className="flex items-center gap-1 text-[11px]">
+                  <span>₹{price.toFixed(1)}</span>
+                  <span
+                    className={`font-semibold ${isPos ? "text-emerald-400" : "text-rose-400"}`}
+                  >
+                    {isPos ? "+" : ""}
+                    {changePct.toFixed(1)}%
+                  </span>
+                </div>
+
+                <span
+                  className={`text-[9px] px-1 py-0.2 rounded font-bold ${
+                    item.signal === "BUY"
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : "bg-slate-800 text-slate-400"
+                  }`}
+                >
+                  {item.signal}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={(e) => handleRemoveWatchlist(item.symbol, e)}
+                  className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-rose-400 transition-opacity ml-0.5"
+                  title="Remove from Watchlist"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            );
+          })}
+
+          {/* Add Symbol Input / Trigger */}
+          {showAddSymbol ? (
+            <div className="flex items-center gap-1">
+              <input
+                type="text"
+                autoFocus
+                value={newSymbolInput}
+                onChange={(e) => setNewSymbolInput(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === "Enter" && handleAddWatchlist()}
+                placeholder="SYMBOL (e.g. SBIN)"
+                className="h-8 w-28 rounded-lg border border-sky-500/50 bg-slate-950 px-2 text-xs font-mono font-bold text-sky-300 outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleAddWatchlist}
+                className="flex h-8 items-center justify-center rounded-lg bg-sky-500 px-2.5 text-xs font-bold text-white hover:bg-sky-400 transition-colors cursor-pointer"
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddSymbol(false);
+                  setNewSymbolInput("");
+                }}
+                className="flex size-8 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-slate-400 hover:text-white"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowAddSymbol(true)}
+              className="flex items-center gap-1.5 rounded-xl border border-dashed border-slate-700 bg-slate-950/40 px-2.5 py-1.5 text-xs font-medium text-slate-400 hover:border-slate-500 hover:text-white transition-all cursor-pointer"
+            >
+              <Plus className="size-3.5 text-sky-400" />
+              <span>Add Ticker</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Hero Grid: Candlestick Chart + AI Signals */}

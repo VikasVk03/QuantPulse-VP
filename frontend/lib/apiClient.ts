@@ -188,4 +188,21 @@ export const api = {
         `/api/live-market/microstructure?symbol=${encodeURIComponent(symbol)}`,
       ),
   },
+
+  // Watchlist Domain
+  watchlist: {
+    get: () => api.get("/api/watchlist"),
+    add: (item: { symbol: string; name?: string; note?: string }) =>
+      api.post("/api/watchlist", item),
+    remove: (symbol: string) =>
+      api.delete(`/api/watchlist/${encodeURIComponent(symbol)}`),
+  },
+
+  // Quant Alerts Domain
+  alerts: {
+    get: () => api.get("/api/alerts"),
+    create: (alert: any) => api.post("/api/alerts", alert),
+    dismiss: (id: string) => api.post(`/api/alerts/${encodeURIComponent(id)}/dismiss`),
+    delete: (id: string) => api.delete(`/api/alerts/${encodeURIComponent(id)}`),
+  },
 };
