@@ -46,9 +46,11 @@ export class MongoMarketDataRepository
     async getBars(
         query: MarketBarQuery,
     ): Promise<MarketBar[]> {
-        const filter: Filter<MarketDataDocument> = {
-            datasetId: query.datasetId,
-        };
+        const filter: Filter<MarketDataDocument> = {};
+
+        if (query.datasetId !== undefined) {
+            filter.datasetId = query.datasetId;
+        }
 
         if (query.symbol !== undefined) {
             filter.symbol = query.symbol.toUpperCase();

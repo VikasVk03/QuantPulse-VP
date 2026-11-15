@@ -18,7 +18,7 @@ export class MarketDataService {
     async getBars(
         query: MarketBarQuery,
     ): Promise<MarketBarInput[]> {
-        if (!query.datasetId.trim()) {
+        if (!query.datasetId || !query.datasetId.trim()) {
             throw new Error(
                 "Dataset ID is required",
             );

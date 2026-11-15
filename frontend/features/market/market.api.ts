@@ -21,8 +21,9 @@ export async function fetchDatasets(): Promise<DatasetListItem[]> {
  */
 export async function fetchDatasetAnalytics(
   datasetId: string,
+  symbol?: string,
 ): Promise<MarketAnalysisResponse> {
-  const result = await api.analytics.getDatasetAnalytics(datasetId);
+  const result = await api.analytics.getDatasetAnalytics(datasetId, symbol);
 
   if (!result || !result.success) {
     throw new Error(result?.error || "Market analysis failed.");

@@ -13,6 +13,7 @@ import { createScannerRoutes } from "./modules/scanner/scanner.routes.js";
 import { createRiskRoutes } from "./modules/risk/risk.routes.js";
 import { createBacktestingRoutes } from "./modules/backtesting/backtesting.routes.js";
 import { createLiveMarketRoutes } from "./modules/live-market/live-market.routes.js";
+import { createWatchlistRoutes, createAlertsRoutes } from "./modules/watchlist/watchlist.routes.js";
 import { createHealthRoutes } from "./modules/health/health.routes.js";
 import { HealthController } from "./modules/health/health.controller.js";
 
@@ -55,6 +56,8 @@ const createApp = () => {
   app.use("/api/risk", createRiskRoutes());
   app.use("/api/backtesting", createBacktestingRoutes());
   app.use("/api/live-market", createLiveMarketRoutes());
+  app.use("/api/watchlist", createWatchlistRoutes());
+  app.use("/api/alerts", createAlertsRoutes());
 
   app.use(errorHandler);
 

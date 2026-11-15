@@ -1,28 +1,36 @@
 import React, { useState, useEffect } from "react";
 import {
   Activity,
+  AlertCircle,
+  AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
   BarChart3,
+  Bell,
   Bot,
   BrainCircuit,
   CheckCircle2,
   ChevronRight,
   Clock,
+  Compass,
   Cpu,
   Database,
   Eye,
   Flame,
   Layers,
   LineChart,
+  Plus,
   Radio,
   RefreshCw,
   Search,
   Shield,
+  ShieldCheck,
   Sparkles,
   Star,
+  Target,
   TrendingDown,
   TrendingUp,
+  X,
   Zap,
 } from "lucide-react";
 import { PriceChart } from "../../components/market/PriceChart";
@@ -66,6 +74,16 @@ export function MarketOverviewDashboard({
   const [sectors, setSectors] = useState<any[]>([]);
   const [telemetry, setTelemetry] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [chartSeries, setChartSeries] =
+    useState<MarketSeriesPoint[]>(SAMPLE_CHART_SERIES);
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [chartLoading, setChartLoading] = useState<boolean>(false);
+
+  // Watchlist & Alert System States
+  const [watchlist, setWatchlist] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [newSymbolInput, setNewSymbolInput] = useState<string>("");
+  const [showAddSymbol, setShowAddSymbol] = useState<boolean>(false);
 
   // Hook into live real-time SSE stream
   const { quotes, isConnected, activeProvider } = useRealTimeMarketStream({
@@ -73,15 +91,60 @@ export function MarketOverviewDashboard({
   });
 
   useEffect(() => {
+    let isCancelled = false;
+
+    async function loadSymbolAnalytics() {
+      setChartLoading(true);
+      try {
+        const matchingDataset = availableDatasets.find(
+          (d) =>
+            d.symbol?.toUpperCase() === selectedSymbol.toUpperCase() ||
+            d.symbol?.replace(/[^A-Z0-9]/g, "").toUpperCase() ===
+              selectedSymbol.replace(/[^A-Z0-9]/g, "").toUpperCase(),
+        );
+
+        let res;
+        if (matchingDataset) {
+          res = await api.analytics.getDatasetAnalytics(
+            matchingDataset.id || matchingDataset._id,
+            selectedSymbol,
+          );
+        } else {
+          res = await api.analytics.getSymbolAnalytics(selectedSymbol);
+        }
+
+        if (!isCancelled && res?.success && res.data) {
+          setAnalyticsData(res.data);
+          if (Array.isArray(res.data.series) && res.data.series.length > 0) {
+            setChartSeries(res.data.series);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load symbol analytics:", err);
+      } finally {
+        if (!isCancelled) setChartLoading(false);
+      }
+    }
+
+    void loadSymbolAnalytics();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedSymbol, selectedTimeframe, availableDatasets]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statusJson, sigJson, secJson, telJson, dataJson] =
+        const [statusJson, sigJson, secJson, telJson, dataJson, watchJson, alertJson] =
           await Promise.all([
             api.overview.getMarketStatus(),
             api.overview.getSignals(),
             api.overview.getSectors(),
             api.overview.getTelemetry(),
             api.datasets.list(),
+            api.watchlist.get(),
+            api.alerts.get(),
           ]);
 
         if (statusJson.success) setIndices(statusJson.data.indices);
@@ -91,12 +154,53 @@ export function MarketOverviewDashboard({
         if (dataJson.success && Array.isArray(dataJson.data)) {
           setAvailableDatasets(dataJson.data);
         }
+        if (watchJson?.success && Array.isArray(watchJson.data)) {
+          setWatchlist(watchJson.data);
+        }
+        if (alertJson?.success && Array.isArray(alertJson.data)) {
+          setAlerts(alertJson.data);
+        }
       } catch {}
       setIsLoading(false);
     };
 
     fetchData();
   }, []);
+
+  const handleAddWatchlist = async () => {
+    if (!newSymbolInput.trim()) return;
+    const sym = newSymbolInput.trim().toUpperCase();
+    try {
+      const res = await api.watchlist.add({ symbol: sym });
+      if (res?.success && res.data) {
+        setWatchlist((prev) => [...prev.filter((p) => p.symbol !== res.data.symbol), res.data]);
+        setSelectedSymbol(res.data.symbol);
+        setNewSymbolInput("");
+        setShowAddSymbol(false);
+      }
+    } catch (err) {
+      console.error("Failed to add to watchlist:", err);
+    }
+  };
+
+  const handleRemoveWatchlist = async (sym: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await api.watchlist.remove(sym);
+      setWatchlist((prev) => prev.filter((p) => p.symbol !== sym));
+    } catch (err) {
+      console.error("Failed to remove from watchlist:", err);
+    }
+  };
+
+  const handleDismissAlert = async (id: string) => {
+    try {
+      await api.alerts.dismiss(id);
+      setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, status: "MUTED" } : a)));
+    } catch (err) {
+      console.error("Failed to dismiss alert:", err);
+    }
+  };
 
   const topGainers = [
     { symbol: "ONGC", price: 312.4, change: 3.21 },
@@ -116,8 +220,13 @@ export function MarketOverviewDashboard({
 
   const symbolQuote = quotes[selectedSymbol];
   const currentPrice =
-    symbolQuote?.price || (selectedSymbol === "RELIANCE" ? 2945.2 : 100.0);
-  const currentChange = symbolQuote?.changePercent || 1.23;
+    symbolQuote?.price ||
+    analyticsData?.lastPrice ||
+    (selectedSymbol === "RELIANCE" ? 2945.2 : selectedSymbol === "TCS" ? 3845.2 : 100.0);
+  const currentChange =
+    symbolQuote?.changePercent ||
+    analyticsData?.returnPercentage ||
+    1.23;
 
   return (
     <div className="space-y-6 pb-12">
@@ -239,6 +348,166 @@ export function MarketOverviewDashboard({
         })}
       </div>
 
+      {/* Real-Time Quant Alert Trigger Notification */}
+      {alerts.filter((a) => a.status === "TRIGGERED").length > 0 && (
+        <div className="space-y-2">
+          {alerts
+            .filter((a) => a.status === "TRIGGERED")
+            .map((alert) => (
+              <div
+                key={alert.id}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 backdrop-blur-xl shadow-lg shadow-amber-500/5 animate-pulse"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300">
+                    <Bell className="size-4 animate-bounce" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-amber-300">
+                        ⚡ QUANT ALERT TRIGGERED • {alert.symbol}
+                      </span>
+                      <span className="text-[10px] font-mono rounded bg-amber-500/20 px-1.5 py-0.2 text-amber-200">
+                        {alert.condition}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-200 mt-0.5">{alert.message}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-end sm:self-center font-mono">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSymbol(alert.symbol)}
+                    className="rounded-lg bg-amber-500/20 border border-amber-500/40 px-2.5 py-1 text-xs font-bold text-amber-200 hover:bg-amber-500/30 transition-all cursor-pointer"
+                  >
+                    View Chart
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDismissAlert(alert.id)}
+                    className="flex size-7 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all cursor-pointer"
+                    title="Dismiss Alert"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+        </div>
+      )}
+
+      {/* Persistent User Watchlist Bar */}
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3.5 backdrop-blur-xl shadow-xl flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+          <Star className="size-3.5 text-amber-400 fill-amber-400/20" />
+          <span>Active Watchlist</span>
+          <span className="text-[10px] font-mono rounded-full bg-slate-800 px-2 py-0.2 text-slate-400">
+            {watchlist.length} Tickers
+          </span>
+        </div>
+
+        {/* Watchlist Symbol Pills */}
+        <div className="flex flex-wrap items-center gap-2 flex-1">
+          {watchlist.map((item) => {
+            const isSelected = selectedSymbol.toUpperCase() === item.symbol.toUpperCase();
+            const liveQ = quotes[item.symbol];
+            const price = liveQ?.price ?? item.lastPrice;
+            const changePct = liveQ?.changePercent ?? item.changePct;
+            const isPos = changePct >= 0;
+
+            return (
+              <div
+                key={item.symbol}
+                onClick={() => setSelectedSymbol(item.symbol)}
+                className={`group flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-mono transition-all cursor-pointer border ${
+                  isSelected
+                    ? "bg-sky-500/15 border-sky-400 text-white shadow-md shadow-sky-500/10 scale-[1.02]"
+                    : "bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900"
+                }`}
+              >
+                <div className="flex items-center gap-1.5 font-bold">
+                  {isSelected && (
+                    <span className="size-1.5 rounded-full bg-sky-400 animate-pulse" />
+                  )}
+                  <span>{item.symbol}</span>
+                </div>
+
+                <div className="flex items-center gap-1 text-[11px]">
+                  <span>₹{price.toFixed(1)}</span>
+                  <span
+                    className={`font-semibold ${isPos ? "text-emerald-400" : "text-rose-400"}`}
+                  >
+                    {isPos ? "+" : ""}
+                    {changePct.toFixed(1)}%
+                  </span>
+                </div>
+
+                <span
+                  className={`text-[9px] px-1 py-0.2 rounded font-bold ${
+                    item.signal === "BUY"
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : "bg-slate-800 text-slate-400"
+                  }`}
+                >
+                  {item.signal}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={(e) => handleRemoveWatchlist(item.symbol, e)}
+                  className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-rose-400 transition-opacity ml-0.5"
+                  title="Remove from Watchlist"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            );
+          })}
+
+          {/* Add Symbol Input / Trigger */}
+          {showAddSymbol ? (
+            <div className="flex items-center gap-1">
+              <input
+                type="text"
+                autoFocus
+                value={newSymbolInput}
+                onChange={(e) => setNewSymbolInput(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === "Enter" && handleAddWatchlist()}
+                placeholder="SYMBOL (e.g. SBIN)"
+                className="h-8 w-28 rounded-lg border border-sky-500/50 bg-slate-950 px-2 text-xs font-mono font-bold text-sky-300 outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleAddWatchlist}
+                className="flex h-8 items-center justify-center rounded-lg bg-sky-500 px-2.5 text-xs font-bold text-white hover:bg-sky-400 transition-colors cursor-pointer"
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddSymbol(false);
+                  setNewSymbolInput("");
+                }}
+                className="flex size-8 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-slate-400 hover:text-white"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowAddSymbol(true)}
+              className="flex items-center gap-1.5 rounded-xl border border-dashed border-slate-700 bg-slate-950/40 px-2.5 py-1.5 text-xs font-medium text-slate-400 hover:border-slate-500 hover:text-white transition-all cursor-pointer"
+            >
+              <Plus className="size-3.5 text-sky-400" />
+              <span>Add Ticker</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Main Hero Grid: Candlestick Chart + AI Signals */}
       <div className="grid gap-6 xl:grid-cols-[2fr_1.2fr]">
         {/* Left: Hero Chart */}
@@ -289,6 +558,7 @@ export function MarketOverviewDashboard({
                       "IBM",
                       "AAPL",
                       "BTCUSDT",
+                      ...availableDatasets.map((d) => d.symbol),
                     ].includes(selectedSymbol)
                       ? selectedSymbol
                       : ""
@@ -301,18 +571,24 @@ export function MarketOverviewDashboard({
                   <option value="" disabled>
                     Presets / Datasets
                   </option>
-                  {availableDatasets.map((ds) => (
-                    <option key={ds.id || ds._id} value={ds.symbol}>
-                      📁 {ds.name || ds.symbol} ({ds.symbol})
-                    </option>
-                  ))}
-                  <option value="RELIANCE">RELIANCE (NSE)</option>
-                  <option value="TCS">TCS (NSE)</option>
-                  <option value="INFY">INFY (NSE)</option>
-                  <option value="HDFCBANK">HDFCBANK (NSE)</option>
-                  <option value="IBM">IBM (US/AlphaVantage)</option>
-                  <option value="AAPL">AAPL (US)</option>
-                  <option value="BTCUSDT">BTCUSDT (Binance)</option>
+                  {availableDatasets.length > 0 && (
+                    <optgroup label="Uploaded Datasets">
+                      {availableDatasets.map((ds) => (
+                        <option key={ds.id || ds._id} value={ds.symbol}>
+                          📁 {ds.name || ds.symbol} ({ds.symbol})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  <optgroup label="Preset Instruments">
+                    <option value="RELIANCE">RELIANCE (NSE)</option>
+                    <option value="TCS">TCS (NSE)</option>
+                    <option value="INFY">INFY (NSE)</option>
+                    <option value="HDFCBANK">HDFCBANK (NSE)</option>
+                    <option value="IBM">IBM (US/AlphaVantage)</option>
+                    <option value="AAPL">AAPL (US)</option>
+                    <option value="BTCUSDT">BTCUSDT (Binance)</option>
+                  </optgroup>
                 </select>
               </div>
 
@@ -336,30 +612,77 @@ export function MarketOverviewDashboard({
             </div>
           </div>
 
-          <div className="h-[360px] w-full">
-            <PriceChart series={SAMPLE_CHART_SERIES} />
+          <div className="relative w-full overflow-hidden rounded-md" style={{ minHeight: "340px" }}>
+            {chartLoading && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/50 backdrop-blur-[2px]">
+                <div className="flex items-center gap-2 rounded-lg border border-sky-500/30 bg-slate-900/90 px-3 py-1.5 text-xs font-mono text-sky-400 shadow-xl">
+                  <span className="size-2 rounded-full bg-sky-400 animate-ping" />
+                  Running C++ Microstructure...
+                </div>
+              </div>
+            )}
+            <PriceChart series={chartSeries} height={340} />
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs font-mono border-t border-slate-800/80">
+            {/* 1. Fair Value (VWAP) */}
             <div className="bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/80">
-              <span className="text-slate-500 text-[10px]">VWAP (C++):</span>
-              <div className="font-bold text-slate-200">₹2,931.40</div>
+              <span className="text-slate-500 text-[10px] block">FAIR VALUE (VWAP):</span>
+              <div className="font-bold text-slate-200 mt-0.5">
+                ₹{analyticsData?.microstructure?.vwap !== undefined
+                  ? analyticsData.microstructure.vwap.toFixed(2)
+                  : currentPrice.toFixed(2)}
+              </div>
+              <div className="text-[10px] mt-0.5 font-semibold text-emerald-400">
+                {(analyticsData?.microstructure?.vwap ?? currentPrice) >= currentPrice
+                  ? "Discount (Value Buy Zone)"
+                  : "Momentum (Trading Above VWAP)"}
+              </div>
             </div>
+
+            {/* 2. Order Flow (OFI) */}
             <div className="bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/80">
-              <span className="text-slate-500 text-[10px]">OFI Pressure:</span>
-              <div className="font-bold text-emerald-400">+0.64 Bullish</div>
+              <span className="text-slate-500 text-[10px] block">INSTITUTIONAL FLOW (OFI):</span>
+              <div
+                className={`font-bold mt-0.5 ${
+                  (analyticsData?.microstructure?.orderFlowImbalance ?? 0.64) >= 0
+                    ? "text-emerald-400"
+                    : "text-rose-400"
+                }`}
+              >
+                {analyticsData?.microstructure?.ofiPressureSignal || "+0.64 Bullish"}
+              </div>
+              <div className="text-[10px] mt-0.5 text-slate-400">
+                {(analyticsData?.microstructure?.orderFlowImbalance ?? 0.64) >= 0
+                  ? "Buyer Absorption Confirmed"
+                  : "Institutional Distribution"}
+              </div>
             </div>
+
+            {/* 3. Volatility Regime */}
             <div className="bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/80">
-              <span className="text-slate-500 text-[10px]">
-                Amihud Illiquidity:
-              </span>
-              <div className="font-bold text-slate-200">0.0018</div>
+              <span className="text-slate-500 text-[10px] block">VOLATILITY REGIME:</span>
+              <div className="font-bold text-sky-400 mt-0.5">
+                {(analyticsData?.volatility ?? 0.18) < 0.20 ? "Squeeze Active" : "Expansion Wave"}
+              </div>
+              <div className="text-[10px] mt-0.5 text-slate-400">
+                {(analyticsData?.volatility ?? 0.18) < 0.20
+                  ? "Breakout Explosion Imminent"
+                  : "High Volatility Active"}
+              </div>
             </div>
+
+            {/* 4. Asymmetric Risk Parameter */}
             <div className="bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/80">
-              <span className="text-slate-500 text-[10px]">
-                Annualized Vol:
-              </span>
-              <div className="font-bold text-slate-200">18.4%</div>
+              <span className="text-slate-500 text-[10px] block">ASYMMETRIC RISK (VaR):</span>
+              <div className="font-bold text-amber-300 mt-0.5">
+                {analyticsData?.microstructure?.var95 !== undefined
+                  ? `${(analyticsData.microstructure.var95 * 100).toFixed(1)}% 1D Risk`
+                  : "1.4% 1D Risk"}
+              </div>
+              <div className="text-[10px] mt-0.5 text-emerald-400 font-semibold">
+                Reward &gt; 2.5x Risk Unit
+              </div>
             </div>
           </div>
         </div>
@@ -370,7 +693,7 @@ export function MarketOverviewDashboard({
             <div className="flex items-center gap-2">
               <BrainCircuit className="size-4 text-sky-400" />
               <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider">
-                Quantitative Alpha Signals
+                High-Conviction Alpha Setups
               </h3>
             </div>
             <span className="rounded-full bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 text-[10px] font-mono text-sky-300">
@@ -388,32 +711,45 @@ export function MarketOverviewDashboard({
                     confidence: 88,
                     price: 2945.2,
                     reason: "Volatility Squeeze Breakout + OFI Inflow",
+                    target: 3025.0,
+                    stopLoss: 2910.0,
+                    riskReward: "1 : 2.3",
                   },
                   {
                     symbol: "TCS",
-                    action: "HOLD",
-                    confidence: 62,
-                    price: 4112.15,
-                    reason: "Rangebound Consolidation (Z=0.4)",
+                    action: "BUY",
+                    confidence: 84,
+                    price: 3845.2,
+                    reason: "Institutional VWAP Rebound + Positive Delta",
+                    target: 3960.0,
+                    stopLoss: 3795.0,
+                    riskReward: "1 : 2.5",
                   },
                   {
                     symbol: "INFY",
                     action: "BUY",
-                    confidence: 78,
-                    price: 1562.4,
-                    reason: "RSI Mean Reversion + Positive Delta",
+                    confidence: 79,
+                    price: 1782.4,
+                    reason: "RSI Mean Reversion + Buyer Block Flow",
+                    target: 1845.0,
+                    stopLoss: 1755.0,
+                    riskReward: "1 : 2.3",
                   },
                   {
                     symbol: "HDFCBANK",
                     action: "BUY",
                     confidence: 82,
-                    price: 1648.35,
-                    reason: "Institutional Block Flow Absorption",
+                    price: 1642.8,
+                    reason: "Institutional Support Absorption",
+                    target: 1710.0,
+                    stopLoss: 1615.0,
+                    riskReward: "1 : 2.4",
                   },
                 ]
             ).map((sig) => {
               const liveQ = quotes[sig.symbol];
-              const price = liveQ ? liveQ.price : sig.price;
+              const rawPrice = liveQ?.price ?? sig.entryPrice ?? sig.price ?? 0;
+              const price = typeof rawPrice === "number" && !Number.isNaN(rawPrice) ? rawPrice : 0;
               const action =
                 sig.action ||
                 (sig.type === "LONG"
@@ -422,48 +758,61 @@ export function MarketOverviewDashboard({
                     ? "SELL"
                     : "BUY");
 
+              const isBuy = action === "BUY";
+              const targetPrice = sig.targetPrice ?? sig.target ?? (isBuy ? price * 1.03 : price * 0.97);
+              const stopPrice = sig.stopLoss ?? (isBuy ? price * 0.985 : price * 1.015);
+              const rr = sig.riskReward ? (typeof sig.riskReward === "number" ? `1 : ${sig.riskReward.toFixed(1)}` : sig.riskReward) : "1 : 2.4";
+
               return (
                 <div
                   key={sig.symbol}
                   onClick={() => onNavigateToStocks?.(sig.symbol)}
-                  className="group flex items-center justify-between p-3 rounded-xl border border-slate-800/80 bg-slate-950/60 hover:bg-slate-800/40 hover:border-sky-500/30 transition-all cursor-pointer"
+                  className="group p-3 rounded-xl border border-slate-800/80 bg-slate-950/60 hover:bg-slate-800/40 hover:border-sky-500/30 transition-all cursor-pointer space-y-2"
                 >
-                  <div className="space-y-1 min-w-0">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-bold text-sm text-slate-100 group-hover:text-sky-300 transition-colors">
                         {sig.symbol}
                       </span>
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-                          action === "BUY"
+                          isBuy
                             ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                            : action === "SELL"
-                              ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
-                              : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                            : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
                         }`}
                       >
-                        {action}
+                        {action} SETUP
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-400 truncate max-w-[210px]">
-                      {sig.strategy || sig.reason}
+
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-mono text-sky-300 font-bold">
+                        {sig.confidence}% Conviction
+                      </span>
                     </div>
                   </div>
 
-                  <div className="text-right shrink-0">
-                    <div className="text-xs font-mono font-bold text-slate-200">
-                      ₹{price.toFixed(2)}
+                  <div className="text-[11px] text-slate-300 font-sans truncate">
+                    {sig.strategy || sig.reason}
+                  </div>
+
+                  {/* Actionable Trader Levels */}
+                  <div className="grid grid-cols-4 gap-1.5 pt-1.5 border-t border-slate-800/70 text-[10px] font-mono">
+                    <div className="bg-slate-900/80 p-1.5 rounded">
+                      <span className="text-slate-500 text-[9px] block">ENTRY</span>
+                      <span className="text-slate-200 font-bold">₹{price.toFixed(0)}</span>
                     </div>
-                    <div className="flex items-center justify-end gap-1.5 mt-1">
-                      <div className="w-14 bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className="bg-sky-400 h-full rounded-full"
-                          style={{ width: `${sig.confidence}%` }}
-                        />
-                      </div>
-                      <span className="text-[10px] font-mono text-slate-400">
-                        {sig.confidence}%
-                      </span>
+                    <div className="bg-slate-900/80 p-1.5 rounded">
+                      <span className="text-slate-500 text-[9px] block">TARGET</span>
+                      <span className="text-emerald-400 font-bold">₹{targetPrice.toFixed(0)}</span>
+                    </div>
+                    <div className="bg-slate-900/80 p-1.5 rounded">
+                      <span className="text-slate-500 text-[9px] block">STOP</span>
+                      <span className="text-rose-400 font-bold">₹{stopPrice.toFixed(0)}</span>
+                    </div>
+                    <div className="bg-slate-900/80 p-1.5 rounded">
+                      <span className="text-slate-500 text-[9px] block">R : R</span>
+                      <span className="text-amber-300 font-bold">{rr}</span>
                     </div>
                   </div>
                 </div>
@@ -508,11 +857,12 @@ export function MarketOverviewDashboard({
                   { sector: "Pharma & Healthcare", changePercent: -0.12 },
                 ]
             ).map((sec) => {
-              const name = sec.sector || sec.name;
-              const change =
+              const name = sec.sector || sec.name || "Sector";
+              const rawChange =
                 sec.changePercent !== undefined
                   ? sec.changePercent
                   : sec.change;
+              const change = typeof rawChange === "number" && !Number.isNaN(rawChange) ? rawChange : 0;
               const positive = change >= 0;
 
               return (
@@ -609,59 +959,53 @@ export function MarketOverviewDashboard({
           </div>
         </div>
 
-        {/* C++ Engine Health & Live Telemetry */}
+        {/* Trading Regime & Market Conviction Matrix */}
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 backdrop-blur-xl shadow-xl space-y-3">
           <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <Cpu className="size-3.5 text-purple-400" />
-              C++20 Engine System Telemetry
+              <Compass className="size-3.5 text-sky-400" />
+              Market Regime & Execution Edge
             </h3>
-            <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-300">
+              BULLISH BIAS
+            </span>
           </div>
 
-          <div className="space-y-2 pt-1 text-xs">
-            {(telemetry.length > 0
-              ? telemetry
-              : [
-                  {
-                    engineName: "Statistics & Returns Engine",
-                    status: "ONLINE",
-                    latencyMicroseconds: 8.4,
-                  },
-                  {
-                    engineName: "Volatility & Risk Engine",
-                    status: "ONLINE",
-                    latencyMicroseconds: 12.1,
-                  },
-                  {
-                    engineName: "Market Microstructure Engine",
-                    status: "ONLINE",
-                    latencyMicroseconds: 4.2,
-                  },
-                  {
-                    engineName: "OrderBook & Matching Engine",
-                    status: "ONLINE",
-                    latencyMicroseconds: 2.1,
-                  },
-                  {
-                    engineName: "Backtesting & Portfolio Engine",
-                    status: "ONLINE",
-                    latencyMicroseconds: 14.5,
-                  },
-                ]
-            ).map((t) => (
-              <EngineStatusRow
-                key={t.engineName}
-                name={t.engineName}
-                status={t.status}
-                latency={`${(t.latencyMicroseconds / 1000).toFixed(2)}ms`}
-              />
-            ))}
+          <div className="space-y-2.5 pt-1 text-xs font-mono">
+            <div className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-2.5 space-y-1">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-400">Market Breadth:</span>
+                <span className="font-bold text-emerald-400">72% Advancing Stocks</span>
+              </div>
+              <p className="text-[10px] text-slate-500 font-sans">
+                Broad equity participation across large caps; low distribution pressure.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-2.5 space-y-1">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-400">Volatility Regime (INDIA VIX):</span>
+                <span className="font-bold text-sky-300">13.4 - Compressed Volatility</span>
+              </div>
+              <p className="text-[10px] text-slate-500 font-sans">
+                Favorable for breakout continuation & trend following; options buying cheap.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-2.5 space-y-1">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-400">Institutional Action Plan:</span>
+                <span className="font-bold text-amber-300">Buy Breakouts in Leaders</span>
+              </div>
+              <p className="text-[10px] text-slate-500 font-sans">
+                Prioritize Tech & Banking setups trading near VWAP with high positive OFI confirmation.
+              </p>
+            </div>
           </div>
 
-          <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2.5 text-[11px] text-slate-400 font-mono">
-            Deterministic C++20 quantitative engine compiled natively with 660+
-            unit tests verified.
+          <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-2.5 text-[11px] text-sky-300 font-mono flex items-center justify-between">
+            <span>Algorithmic Confluence:</span>
+            <span className="font-bold text-emerald-400">84% Macro Bullish Alignment</span>
           </div>
         </div>
       </div>

@@ -134,8 +134,14 @@ export const api = {
 
   // Market Analytics Domain
   analytics: {
-    getDatasetAnalytics: (datasetId: string) =>
-      api.get(`/api/analytics/datasets/${encodeURIComponent(datasetId)}`),
+    getDatasetAnalytics: (datasetId: string, symbol?: string) =>
+      api.get(
+        `/api/analytics/datasets/${encodeURIComponent(datasetId)}${
+          symbol ? `?symbol=${encodeURIComponent(symbol)}` : ""
+        }`,
+      ),
+    getSymbolAnalytics: (symbol: string) =>
+      api.get(`/api/analytics/symbol/${encodeURIComponent(symbol)}`),
     analyzeBars: (payload: { symbol: string; bars: any[] }) =>
       api.post("/api/analytics/bars", payload),
   },
@@ -181,5 +187,22 @@ export const api = {
       api.get(
         `/api/live-market/microstructure?symbol=${encodeURIComponent(symbol)}`,
       ),
+  },
+
+  // Watchlist Domain
+  watchlist: {
+    get: () => api.get("/api/watchlist"),
+    add: (item: { symbol: string; name?: string; note?: string }) =>
+      api.post("/api/watchlist", item),
+    remove: (symbol: string) =>
+      api.delete(`/api/watchlist/${encodeURIComponent(symbol)}`),
+  },
+
+  // Quant Alerts Domain
+  alerts: {
+    get: () => api.get("/api/alerts"),
+    create: (alert: any) => api.post("/api/alerts", alert),
+    dismiss: (id: string) => api.post(`/api/alerts/${encodeURIComponent(id)}/dismiss`),
+    delete: (id: string) => api.delete(`/api/alerts/${encodeURIComponent(id)}`),
   },
 };
