@@ -113,7 +113,14 @@ export class BacktestingService {
 
     // Deterministic pseudo-random seed based on symbol & strategy
     let seed = 0;
-    const seedStr = (params.symbol || "RELIANCE") + strategy;
+    const MAX_SYMBOL_SEED_LENGTH = 32;
+    const MAX_STRATEGY_SEED_LENGTH = 128;
+    const safeSymbol = String(params.symbol || "RELIANCE").slice(
+      0,
+      MAX_SYMBOL_SEED_LENGTH,
+    );
+    const safeStrategy = String(strategy).slice(0, MAX_STRATEGY_SEED_LENGTH);
+    const seedStr = safeSymbol + safeStrategy;
     for (let c = 0; c < seedStr.length; c++) {
       seed = (seed * 31 + seedStr.charCodeAt(c)) & 0xffffff;
     }
