@@ -24,7 +24,8 @@ export class WatchlistController {
   };
 
   public removeFromWatchlist = (req: Request, res: Response): void => {
-    const { symbol } = req.params;
+    const symbolParam = req.params.symbol;
+    const symbol = Array.isArray(symbolParam) ? symbolParam[0] : symbolParam;
     if (!symbol) {
       res.status(400).json({ success: false, error: "Symbol is required" });
       return;
@@ -49,7 +50,8 @@ export class WatchlistController {
   };
 
   public deleteAlert = (req: Request, res: Response): void => {
-    const { id } = req.params;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
     if (!id) {
       res.status(400).json({ success: false, error: "Alert id is required" });
       return;
@@ -59,7 +61,8 @@ export class WatchlistController {
   };
 
   public dismissAlert = (req: Request, res: Response): void => {
-    const { id } = req.params;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
     if (!id) {
       res.status(400).json({ success: false, error: "Alert id is required" });
       return;

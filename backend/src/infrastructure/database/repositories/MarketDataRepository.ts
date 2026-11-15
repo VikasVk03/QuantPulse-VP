@@ -20,7 +20,7 @@ export interface MarketBarInput {
 }
 
 export interface MarketBarQuery {
-    datasetId: string;
+    datasetId?: string;
     symbol?: string;
     startTime?: Date;
     endTime?: Date;
